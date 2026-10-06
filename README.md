@@ -2,6 +2,10 @@
 
 Página para llevar el registro de proyectos propios. Para cada uno guarda en qué fase está, una descripción, el link al sitio publicado y el repositorio de GitHub.
 
+## Documentación
+
+El manual de usuario está en [documentacion-central](https://github.com/FABIOR1981/documentacion-central/tree/main/bitacora-proyectos/documentacion) ([PDF](https://github.com/FABIOR1981/documentacion-central/blob/main/bitacora-proyectos/documentacion/MANUAL_USUARIO.pdf)). También se puede consultar desde la bitácora de proyectos.
+
 ## Funcionalidades
 
 - **Listado de proyectos** con nombre, descripción, fase, link al sitio y link al repositorio.
