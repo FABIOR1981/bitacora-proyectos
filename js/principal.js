@@ -15,6 +15,8 @@ unlock:svg('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4
 plus:svg('<path d="M12 5v14M5 12h14"/>'),
 tema:svg('<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>'),
 ext:svg('<path d="M7 17 17 7M8 7h9v9"/>'),
+search:svg('<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>'),
+sort:svg('<path d="M7 4v16M4 17l3 3 3-3M17 20V4m-3 3 3-3 3 3"/>'),
 repo:svg('<path d="M6 3v12"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M18 8.5a9 9 0 0 1-9 9"/>')};
 
 /* --- cifrado (AES-GCM + PBKDF2) --- */
@@ -60,6 +62,7 @@ function pintar(){
 function modo(){
   $('#nuevo').hidden=!admin;
   const l=$('#llave');l.innerHTML=admin?I.unlock+' Salir':I.lock+' Admin';l.classList.toggle('on',admin);
+  $('#mNuevo').hidden=!admin;$('#mLlave').innerHTML=(admin?I.unlock:I.lock)+'<span>'+(admin?'Salir':'Admin')+'</span>';$('#mLlave').classList.toggle('on',admin);
   filtros();pintar();
 }
 
@@ -117,3 +120,17 @@ $('#fEd').onsubmit=async e=>{
 cargar().then(modo).catch(()=>{$('#resumen').textContent='No se pudo leer el JSON de GitHub. Revisá la función de Netlify y sus variables de entorno.'});
 
 $('#nuevo').innerHTML=I.plus+' Nuevo';$('#tema').innerHTML=I.tema;$('#tema').setAttribute('aria-label','Cambiar tema claro/oscuro');
+
+/* --- menú fijo móvil --- */
+const mb=(id,ico,txt)=>$(id).innerHTML=ico+'<span>'+txt+'</span>';
+mb('#mBuscar',I.search,'Buscar');mb('#mOrden',I.sort,'Orden');mb('#mTema',I.tema,'Tema');mb('#mNuevo',I.plus,'Nuevo');
+$('#mBuscar').onclick=()=>{const on=document.body.classList.toggle('buscando');$('#mBuscar').setAttribute('aria-pressed',on);if(on)$('#buscar').focus()};
+$('#mOrden').onclick=()=>{
+  const ciclo=[['nombre',1],['nombre',-1],['estado',1],['estado',-1]];
+  const i=ciclo.findIndex(c=>c[0]===orden&&c[1]===dir),n=ciclo[(i+1)%4];
+  orden=n[0];dir=n[1];$('#orden').value=orden;$('#dir').textContent=dir>0?'↑ Asc':'↓ Desc';pintar();
+  toast('Orden: '+orden+(dir>0?' ascendente':' descendente'));
+};
+$('#mTema').onclick=()=>$('#tema').click();
+$('#mNuevo').onclick=()=>$('#nuevo').click();
+$('#mLlave').onclick=()=>$('#llave').click();
