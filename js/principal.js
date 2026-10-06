@@ -1,6 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.2.0'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.3.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null;
@@ -59,7 +59,7 @@ function pintar(){
       <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</span>
       <h2>${esc(p.nombre)}</h2><p class="desc">${esc(p.descripcion)}</p>
       <div class="links">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock} Sitio</span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
-      ${admin?`${p.repo?`<button data-docs="${esc(p.id)}">${I.doc} Docs</button>`:''}<button data-ed="${esc(p.id)}">Editar</button><button class="del" data-del="${esc(p.id)}">Borrar</button>`:''}</div>
+      ${admin?`${p.repo?`<button data-docs="${esc(p.id)}">${I.doc} Docs</button>`:''}<button data-ed="${esc(p.id)}">Editar</button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;
   $('#resumen').textContent=`${datos.length} proyectos · ${prod} en producción${admin?' · modo admin':''}`;
@@ -100,17 +100,22 @@ function abrirEd(id){
   $('#tEd').textContent=id?'Editar proyecto':'Nuevo proyecto';
   $('#eNombre').value=p.nombre||'';$('#eDesc').value=p.descripcion||'';$('#eRepo').value=p.repo||'';
   $('#eUrl').value=p.url||'';$('#eFase').value=p.fase;$('#ePriv').checked=!!p.privado;$('#avEd').textContent='';
+  $('#bEd').hidden=!id;
   $('#dEd').showModal();
 }
 $('#nuevo').onclick=()=>abrirEd(null);
 $('#lista').onclick=async e=>{
   const dc=e.target.closest('[data-docs]');if(dc)return verDocs(dc.dataset.docs);
-  const ed=e.target.closest('[data-ed]'),del=e.target.closest('[data-del]');
+  const ed=e.target.closest('[data-ed]');
   if(ed)return abrirEd(ed.dataset.ed);
-  if(del&&confirm('¿Borrar este proyecto?')){
-    const copia=[...datos];datos=datos.filter(p=>p.id!==del.dataset.del);
-    try{await guardar();toast('Borrado');modo()}catch(er){datos=copia;toast(er.message)}
-  }
+};
+$('#bEd').onclick=async()=>{
+  if(!editId||!confirm('¿Borrar este proyecto?'))return;
+  const b=$('#bEd');b.disabled=true;$('#avEd').textContent='Borrando…';
+  const copia=[...datos];datos=datos.filter(p=>p.id!==editId);
+  try{await guardar();$('#dEd').close();toast('Borrado');modo()}
+  catch(er){datos=copia;$('#avEd').textContent=er.message}
+  b.disabled=false;
 };
 $('#fEd').onsubmit=async e=>{
   e.preventDefault();const g=$('#gEd');g.disabled=true;$('#avEd').textContent='Guardando…';
@@ -157,16 +162,6 @@ async function verDocs(id){
   try{
     const r=await apiPost({accion:'docs',repo:docsRepo}),j=await r.json();
     if(!r.ok)throw new Error(j.error||'Error '+r.status);
-    $('#listaDocs').innerHTML=j.archivos.length?j.archivos.map(a=>`<div class="doc"><span>${esc(a.nombre)}<small>${tam(a.tam)}</small></span><button class="btn" data-bajar="${esc(a.ruta)}" data-nom="${esc(a.nombre)}">${I.down} Descargar</button></div>`).join(''):'<p class="vacio">Sin documentación en documentacion-central para este proyecto.</p>';
+    $('#listaDocs').innerHTML=j.archivos.length?j.archivos.map(a=>`<div class="doc"><span>${esc(a.nombre)}<small>${tam(a.tam)}</small></span><a class="btn" href="${esc(a.url)}" target="_blank" rel="noopener">${I.down} Abrir</a></div>`).join(''):'<p class="vacio">Sin documentación en documentacion-central para este proyecto.</p>';
   }catch(e){$('#listaDocs').innerHTML=`<p class="aviso">${esc(e.message)}</p>`}
 }
-$('#listaDocs').onclick=async e=>{
-  const b=e.target.closest('[data-bajar]');if(!b)return;b.disabled=true;
-  try{
-    const r=await apiPost({accion:'bajar',repo:docsRepo,ruta:b.dataset.bajar});
-    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||'Error '+r.status);
-    const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');
-    a.href=url;a.download=b.dataset.nom;a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);
-  }catch(er){toast(er.message)}
-  b.disabled=false;
-};

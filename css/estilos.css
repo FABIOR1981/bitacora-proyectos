@@ -5,6 +5,7 @@
 :root[data-tema=oscuro]{--bg:#121110;--sf:#1c1b18;--tx:#f1eee6;--mu:#a29e92;--bd:#2f2d28;--ac:#f1eee6;--produccion:#4ade80;--desarrollo:#fbbf24;--prototipo:#a78bfa;--pausa:#a8a29e;--idea:#38bdf8;color-scheme:dark}
 :root[data-tema=claro]{color-scheme:light}
 *{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
 html{padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0)}
 body{background:var(--bg);color:var(--tx);font-family:var(--fh);min-height:100vh}
 main{max-width:1100px;margin:0 auto;padding:56px 24px 80px}
@@ -34,7 +35,9 @@ h2{font-size:1.3rem;font-weight:700;letter-spacing:-.02em;word-break:break-word}
 .links a,.links span,.links button{font:500 .75rem var(--fm);padding:7px 12px;border-radius:8px;border:1px solid var(--bd);color:var(--tx);text-decoration:none;background:none;cursor:pointer}
 .links a:hover,.links button:hover{background:var(--ac);color:var(--bg)}
 .links span{color:var(--mu);border-style:dashed;cursor:default}
-.links .del:hover{background:#dc2626;border-color:#dc2626;color:#fff}
+.btn.del{margin-right:auto;color:#dc2626;border-color:color-mix(in srgb,#dc2626 45%,var(--bd))}
+.btn.del:hover{background:#dc2626;border-color:#dc2626;color:#fff}
+.doc .btn{text-decoration:none;flex:none}
 .vacio{color:var(--mu);font-family:var(--fm);padding:40px 0}
 dialog{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:26px;width:min(440px,92vw);margin:auto}
 dialog::backdrop{background:#0009}

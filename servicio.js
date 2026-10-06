@@ -13,6 +13,7 @@ self.addEventListener('fetch', e => {
   const r = e.request, url = new URL(r.url);
   if (r.method !== 'GET') return;                       // guardar (POST) nunca se cachea
   if (url.origin !== location.origin) return;           // fuentes y otros: normal del navegador
+  if (url.searchParams.has('doc')) return;              // documentos de Docs: directo del servidor, sin guardar copia
   const red = fetch(r).then(res => { if (res.ok) { const copia = res.clone(); caches.open(CACHE).then(c => c.put(r, copia)); } return res; });
   if (url.pathname.startsWith('/.netlify/functions/')) {  // datos: primero la red, si no hay, la última copia
     e.respondWith(red.catch(() => caches.match(r)));

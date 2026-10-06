@@ -17,6 +17,8 @@ Página para llevar el registro de proyectos propios. Para cada uno guarda en qu
 2. Para editar, tocá **Admin** e ingresá la contraseña.
 3. Con **+ Nuevo** agregás un proyecto: nombre, descripción, repositorio, URL del sitio, fase y si el repositorio es privado.
 4. **Guardar** sube los cambios. Quedan guardados para todos.
+5. Para modificar o borrar un proyecto, tocá **Editar** en su tarjeta. El botón **Borrar** está dentro de esa ventana y pide confirmación.
+6. **Docs** muestra los documentos del proyecto (de `documentacion-central`). Cada documento se abre con un enlace común, así que funciona también en el celular y en la app instalada. El enlace dura 15 minutos; si vence, volvé a tocar **Docs**.
 
 ## Cómo funciona
 
