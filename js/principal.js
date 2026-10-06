@@ -1,9 +1,9 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.4.0'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.5.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
-let vista=(()=>{try{return localStorage.getItem('vista')||'tarjetas'}catch(e){return 'tarjetas'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
+let dens=(()=>{try{const d=localStorage.getItem('densidad');return d==='b'?'b':'a'}catch(e){return 'a'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const seguro=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
@@ -20,8 +20,7 @@ search:svg('<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>'),
 sort:svg('<path d="M7 4v16M4 17l3 3 3-3M17 20V4m-3 3 3-3 3 3"/>'),
 doc:svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'),
 down:svg('<path d="M12 4v11m-4-4 4 4 4-4M5 20h14"/>'),
-lista:svg('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'),
-tarjetas:svg('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'),
+edit:svg('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'),
 repo:svg('<path d="M6 3v12"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M18 8.5a9 9 0 0 1-9 9"/>')};
 
 /* --- cifrado (AES-GCM + PBKDF2) --- */
@@ -52,18 +51,18 @@ const rango=f=>{const i=Object.keys(FASES).indexOf(f);return i<0?99:i};
 const nombreVisible=p=>p.nombre_fantasia||p.nombre;
 const porNombre=(a,b)=>nombreVisible(a).localeCompare(nombreVisible(b),'es',{sensitivity:'base',numeric:true});
 const comparar=(a,b)=>(orden==='estado'?(rango(a.fase)-rango(b.fase))||porNombre(a,b):porNombre(a,b))*dir;
-function botonVista(){const b=$('#vista');b.innerHTML=(vista==='filas'?I.tarjetas+' Tarjetas':I.lista+' Lista');$('#lista').classList.toggle('filas',vista==='filas')}
+function aplicarDens(){$('#lista').dataset.dens=dens;$('#densidad').value=dens}
 function pintar(){
   const q=$('#buscar').value.trim().toLowerCase();
   const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(nombreVisible(p)+' '+p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q)).sort(comparar);
   $('#lista').innerHTML=v.length?v.map((p,i)=>{
     const r=admin?seguro(p.repo):'',u=seguro(p.url);
     const bloq=!admin&&p.fase==='produccion'&&(p.url||p.urlCifrado);
-    return `<article class="card" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
-      <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</span>
+    return `<article class="card" title="${esc(p.descripcion)}" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
+      <span class="fase" title="${esc(FASES[p.fase]||p.fase)}"><i></i><em class="t">${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</em></span>
       <h2>${esc(nombreVisible(p))}</h2><p class="desc">${esc(p.descripcion)}</p>
-      <div class="links${admin?' admin':''}">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock} Sitio</span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
-      ${admin?`${p.repo?`<button data-docs="${esc(p.id)}">${I.doc} Docs</button>`:''}<button data-ed="${esc(p.id)}">Editar</button>`:''}</div>
+      <div class="links${admin?' admin':''}">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock}<em class="t">Sitio</em></span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext}<em class="t">Sitio</em></a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo}<em class="t">Repo</em></a>`:'<span>sin repo</span>'):''}
+      ${admin?`${p.repo?`<button data-docs="${esc(p.id)}">${I.doc}<em class="t">Docs</em></button>`:''}<button data-ed="${esc(p.id)}">${I.edit}<em class="t">Editar</em></button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;
   $('#resumen').textContent=`${datos.length} proyectos · ${prod} en producción${admin?' · modo admin':''}`;
@@ -78,7 +77,7 @@ function modo(){
 /* --- eventos --- */
 $('#filtros').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;faseActiva=b.dataset.f;filtros();pintar()};
 $('#buscar').oninput=pintar;
-$('#vista').onclick=()=>{vista=vista==='filas'?'tarjetas':'filas';try{localStorage.setItem('vista',vista)}catch(e){}botonVista()};
+$('#densidad').onchange=e=>{dens=e.target.value==='b'?'b':'a';try{localStorage.setItem('densidad',dens)}catch(x){}aplicarDens()};
 $('#orden').onchange=e=>{orden=e.target.value;pintar()};
 $('#dir').onclick=()=>{dir*=-1;$('#dir').textContent=dir>0?'↑ Asc':'↓ Desc';pintar()};
 $('#tema').onclick=()=>{const r=document.documentElement,o=matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.tema=(r.dataset.tema||(o?'oscuro':'claro'))==='oscuro'?'claro':'oscuro'};
@@ -138,7 +137,7 @@ $('#fEd').onsubmit=async e=>{
   g.disabled=false;
 };
 
-botonVista();
+aplicarDens();
 cargar().then(modo).catch(()=>{$('#resumen').textContent='No se pudo leer el JSON de GitHub. Revisá la función de Netlify y sus variables de entorno.'});
 
 $('#nuevo').innerHTML=I.plus+' Nuevo';$('#tema').innerHTML=I.tema;$('#tema').setAttribute('aria-label','Cambiar tema claro/oscuro');

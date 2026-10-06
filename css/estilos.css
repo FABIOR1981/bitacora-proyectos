@@ -52,7 +52,7 @@ dialog h2{font-size:1.4rem;letter-spacing:-.02em}
 #toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0));left:50%;transform:translateX(-50%);background:var(--ac);color:var(--bg);padding:10px 18px;border-radius:99px;font:500 .8rem var(--fm);opacity:0;pointer-events:none;transition:opacity .3s}
 #toast.v{opacity:1}
 @media(prefers-reduced-motion:reduce){.card{animation:none;transition:none}}
-#orden{width:auto;border-radius:99px;padding:8px 14px;font:500 .8rem var(--fm)}
+#orden,#densidad{width:auto;border-radius:99px;padding:8px 14px;font:600 .8rem var(--fh);cursor:pointer}
 
 /* --- refinado (impeccable) --- */
 .btn,.chip,.links a,.links button,.links span{font-family:var(--fh);font-weight:600;font-size:.8rem;display:inline-flex;align-items:center;gap:7px}
@@ -99,15 +99,19 @@ dialog{max-height:88vh;overflow:auto}
 .doc span{display:grid;gap:2px;min-width:0;word-break:break-word;font-weight:600}
 .doc small{color:var(--mu);font-weight:400;font-size:.75rem;font-variant-numeric:tabular-nums}
 
-/* --- vista en filas (escritorio) --- */
+/* --- densidad de tarjetas (escritorio) --- */
+.t{font-style:normal}
 @media(min-width:721px){
-  .grid.filas{display:flex;flex-direction:column;gap:8px}
-  .grid.filas .card{display:grid;grid-template-columns:150px minmax(0,1fr) auto;grid-template-areas:"f n l" "f d l";column-gap:20px;row-gap:2px;align-items:center;padding:14px 18px;border-radius:14px}
-  .grid.filas .card:hover{transform:none}
-  .grid.filas .fase{grid-area:f}
-  .grid.filas h2{grid-area:n;font-size:1.1rem}
-  .grid.filas .desc{grid-area:d;-webkit-line-clamp:1;font-size:.85rem}
-  .grid.filas .links{grid-area:l;flex-wrap:nowrap;justify-content:flex-end}
-  .grid.filas .links.admin a,.grid.filas .links.admin span,.grid.filas .links.admin button{flex:none;padding:7px 12px;font-size:.75rem}
+  .grid[data-dens=a]{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  .grid[data-dens=a] .links.admin{flex-wrap:wrap}
+  .grid[data-dens=a] .links.admin a,.grid[data-dens=a] .links.admin span,.grid[data-dens=a] .links.admin button{flex:1 1 40%;justify-content:center;white-space:nowrap;padding:7px 8px;font-size:.75rem}
+  .grid[data-dens=b]{grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:10px}
+  .grid[data-dens=b] .card{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"f n" "l l";align-items:start;gap:8px;padding:12px}
+  .grid[data-dens=b] .fase{grid-area:f;padding-top:5px}
+  .grid[data-dens=b] h2{grid-area:n;font-size:.95rem;line-height:1.2}
+  .grid[data-dens=b] .desc{display:none}
+  .grid[data-dens=b] .links{grid-area:l;flex-wrap:wrap;gap:6px}
+  .grid[data-dens=b] .links a,.grid[data-dens=b] .links button,.grid[data-dens=b] .links span{flex:none;min-width:32px;min-height:32px;padding:6px;justify-content:center}
+  .grid[data-dens=b] .links span:not(.bloq){display:none}
+  .grid[data-dens=b] .t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }
-@media(max-width:720px){#vista{display:none}}
