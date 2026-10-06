@@ -3,7 +3,7 @@ const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'P
 const VERSION='1.4.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
-let vista=(()=>{try{return localStorage.getItem('vista')||'filas'}catch(e){return 'filas'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
+let vista=(()=>{try{return localStorage.getItem('vista')||'tarjetas'}catch(e){return 'tarjetas'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const seguro=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
