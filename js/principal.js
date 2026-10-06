@@ -1,9 +1,9 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.3.0'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.4.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
-let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
+let vista=(()=>{try{return localStorage.getItem('vista')||'filas'}catch(e){return 'filas'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const seguro=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
@@ -20,6 +20,8 @@ search:svg('<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>'),
 sort:svg('<path d="M7 4v16M4 17l3 3 3-3M17 20V4m-3 3 3-3 3 3"/>'),
 doc:svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'),
 down:svg('<path d="M12 4v11m-4-4 4 4 4-4M5 20h14"/>'),
+lista:svg('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'),
+tarjetas:svg('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'),
 repo:svg('<path d="M6 3v12"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M18 8.5a9 9 0 0 1-9 9"/>')};
 
 /* --- cifrado (AES-GCM + PBKDF2) --- */
@@ -50,6 +52,7 @@ const rango=f=>{const i=Object.keys(FASES).indexOf(f);return i<0?99:i};
 const nombreVisible=p=>p.nombre_fantasia||p.nombre;
 const porNombre=(a,b)=>nombreVisible(a).localeCompare(nombreVisible(b),'es',{sensitivity:'base',numeric:true});
 const comparar=(a,b)=>(orden==='estado'?(rango(a.fase)-rango(b.fase))||porNombre(a,b):porNombre(a,b))*dir;
+function botonVista(){const b=$('#vista');b.innerHTML=(vista==='filas'?I.tarjetas+' Tarjetas':I.lista+' Lista');$('#lista').classList.toggle('filas',vista==='filas')}
 function pintar(){
   const q=$('#buscar').value.trim().toLowerCase();
   const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(nombreVisible(p)+' '+p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q)).sort(comparar);
@@ -75,6 +78,7 @@ function modo(){
 /* --- eventos --- */
 $('#filtros').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;faseActiva=b.dataset.f;filtros();pintar()};
 $('#buscar').oninput=pintar;
+$('#vista').onclick=()=>{vista=vista==='filas'?'tarjetas':'filas';try{localStorage.setItem('vista',vista)}catch(e){}botonVista()};
 $('#orden').onchange=e=>{orden=e.target.value;pintar()};
 $('#dir').onclick=()=>{dir*=-1;$('#dir').textContent=dir>0?'↑ Asc':'↓ Desc';pintar()};
 $('#tema').onclick=()=>{const r=document.documentElement,o=matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.tema=(r.dataset.tema||(o?'oscuro':'claro'))==='oscuro'?'claro':'oscuro'};
@@ -134,6 +138,7 @@ $('#fEd').onsubmit=async e=>{
   g.disabled=false;
 };
 
+botonVista();
 cargar().then(modo).catch(()=>{$('#resumen').textContent='No se pudo leer el JSON de GitHub. Revisá la función de Netlify y sus variables de entorno.'});
 
 $('#nuevo').innerHTML=I.plus+' Nuevo';$('#tema').innerHTML=I.tema;$('#tema').setAttribute('aria-label','Cambiar tema claro/oscuro');
