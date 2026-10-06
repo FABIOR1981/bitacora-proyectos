@@ -1,6 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.5.3'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.5.4'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let dens=(()=>{try{const d=localStorage.getItem('densidad');return d==='b'?'b':'a'}catch(e){return 'a'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
@@ -62,7 +62,7 @@ function pintar(){
       <span class="fase" title="${esc(FASES[p.fase]||p.fase)}"><i></i><em class="t">${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</em></span>
       <h2>${esc(nombreVisible(p))}</h2><p class="desc">${esc(p.descripcion)}</p>
       <div class="links${admin?' admin':''}">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock}<em class="t">Sitio</em></span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext}<em class="t">Sitio</em></a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo}<em class="t">Repo</em></a>`:'<span>sin repo</span>'):''}
-      ${p.docs||p.repo?`<button data-docs="${esc(p.id)}">${I.doc}<em class="t">Docs</em></button>`:''}${admin?`<button data-ed="${esc(p.id)}">${I.edit}<em class="t">Editar</em></button>`:''}</div>
+      ${p.nombre?`<button data-docs="${esc(p.id)}">${I.doc}<em class="t">Docs</em></button>`:''}${admin?`<button data-ed="${esc(p.id)}">${I.edit}<em class="t">Editar</em></button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;
   $('#resumen').textContent=`${datos.length} proyectos · ${prod} en producción${admin?' · modo admin':''}`;
@@ -167,7 +167,7 @@ const apiPost=c=>fetch(API,{method:'POST',headers:{'Content-Type':'application/j
 const tam=n=>n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':(n/1048576).toFixed(1)+' MB';
 async function verDocs(id){
   const p=datos.find(x=>x.id===id);if(!p)return;
-  docsRepo=p.docs||repoDe(p.repo);
+  docsRepo=p.docs||repoDe(p.repo)||'FABIOR1981/'+p.nombre;
   $('#tDocs').textContent='Documentación · '+nombreVisible(p);$('#listaDocs').innerHTML='<p class="vacio">Buscando…</p>';$('#dDocs').showModal();
   try{
     const r=await apiPost({accion:'docs',repo:docsRepo}),j=await r.json();
