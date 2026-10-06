@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mis proyectos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f4ef;--sf:#fff;--tx:#1b1a17;--mu:#6d6a62;--bd:#e4e0d6;--ac:#1b1a17;
+--produccion:#16a34a;--desarrollo:#d97706;--prototipo:#7c3aed;--pausa:#78716c;--idea:#0284c7;
+--fh:'Bricolage Grotesque',system-ui,sans-serif;--fm:'Geist Mono',ui-monospace,monospace}
+@media(prefers-color-scheme:dark){:root:not([data-tema=claro]){--bg:#121110;--sf:#1b1a18;--tx:#f1eee6;--mu:#9a968b;--bd:#2c2a26;--ac:#f1eee6}}
+:root[data-tema=oscuro]{--bg:#121110;--sf:#1b1a18;--tx:#f1eee6;--mu:#9a968b;--bd:#2c2a26;--ac:#f1eee6}
+*{box-sizing:border-box;margin:0}
+html{padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0)}
+body{background:var(--bg);color:var(--tx);font-family:var(--fh);min-height:100vh}
+main{max-width:1100px;margin:0 auto;padding:56px 24px 80px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+h1{font-size:clamp(2.4rem,7vw,4.5rem);font-weight:800;letter-spacing:-.04em;line-height:.95}
+.sub{color:var(--mu);font-family:var(--fm);font-size:.85rem;margin-top:14px}
+.tema{background:var(--sf);border:1px solid var(--bd);color:var(--tx);border-radius:99px;padding:8px 14px;font:500 .8rem var(--fm);cursor:pointer}
+.barra{display:flex;gap:10px;flex-wrap:wrap;margin:40px 0 28px;align-items:center}
+input{flex:1;min-width:200px;background:var(--sf);border:1px solid var(--bd);color:var(--tx);border-radius:12px;padding:12px 16px;font:400 .95rem var(--fh)}
+input:focus,.chip:focus-visible,a:focus-visible,.tema:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.chip{background:transparent;border:1px solid var(--bd);color:var(--mu);border-radius:99px;padding:8px 14px;font:500 .78rem var(--fm);cursor:pointer;display:flex;gap:8px;align-items:center}
+.chip[aria-pressed=true]{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+.chip b{font-weight:500;opacity:.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;transition:transform .2s,border-color .2s;animation:ent .4s both}
+.card:hover{transform:translateY(-3px);border-color:var(--c)}
+@keyframes ent{from{opacity:0;transform:translateY(8px)}}
+.fase{display:inline-flex;align-items:center;gap:8px;font:500 .72rem var(--fm);color:var(--c);text-transform:uppercase;letter-spacing:.06em}
+.fase i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 20%,transparent)}
+h2{font-size:1.3rem;font-weight:700;letter-spacing:-.02em;word-break:break-word}
+.desc{color:var(--mu);font-size:.92rem;line-height:1.45;flex:1}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+.links a,.links span{font:500 .75rem var(--fm);padding:7px 12px;border-radius:8px;border:1px solid var(--bd);color:var(--tx);text-decoration:none}
+.links a:hover{background:var(--ac);color:var(--bg)}
+.links span{color:var(--mu);border-style:dashed}
+.vacio{color:var(--mu);font-family:var(--fm);padding:40px 0}
+@media(prefers-reduced-motion:reduce){.card{animation:none;transition:none}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div><h1>Mis proyectos</h1><p class="sub" id="resumen">Cargando…</p></div>
+  <button class="tema" id="tema" aria-label="Cambiar tema">◐ tema</button>
+</header>
+<div class="barra">
+  <input id="buscar" type="search" placeholder="Buscar proyecto…" aria-label="Buscar proyecto">
+  <div id="filtros" style="display:contents"></div>
+</div>
+<section class="grid" id="lista" aria-live="polite"></section>
+</main>
+<script>
+const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
+let datos=[],faseActiva='todas';
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const seguro=u=>/^https?:\/\//i.test(u)?esc(u):'';
+
+function filtros(){
+  const cuenta=f=>f==='todas'?datos.length:datos.filter(p=>p.fase===f).length;
+  $('#filtros').innerHTML=['todas',...Object.keys(FASES)].filter(f=>f==='todas'||cuenta(f)).map(f=>
+    `<button class="chip" data-f="${f}" aria-pressed="${f===faseActiva}">${f==='todas'?'Todas':FASES[f]} <b>${cuenta(f)}</b></button>`).join('');
+}
+function pintar(){
+  const q=$('#buscar').value.trim().toLowerCase();
+  const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q));
+  $('#lista').innerHTML=v.length?v.map((p,i)=>{
+    const r=seguro(p.repo),u=seguro(p.url);
+    return `<article class="card" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
+      <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado?' · 🔒 privado':''}</span>
+      <h2>${esc(p.nombre)}</h2><p class="desc">${esc(p.descripcion)}</p>
+      <div class="links">${u?`<a href="${u}" target="_blank" rel="noopener">↗ Sitio</a>`:'<span>sin URL</span>'}${r?`<a href="${r}" target="_blank" rel="noopener">⌥ Repositorio</a>`:'<span>sin repo</span>'}</div>
+    </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
+}
+$('#filtros').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;faseActiva=b.dataset.f;filtros();pintar()});
+$('#buscar').addEventListener('input',pintar);
+$('#tema').addEventListener('click',()=>{const r=document.documentElement,o=matchMedia('(prefers-color-scheme:dark)').matches;
+  const act=r.dataset.tema||(o?'oscuro':'claro');r.dataset.tema=act==='oscuro'?'claro':'oscuro'});
+fetch('proyectos.json').then(r=>r.json()).then(j=>{
+  datos=j.proyectos||[];
+  const prod=datos.filter(p=>p.fase==='produccion').length;
+  $('#resumen').textContent=`${datos.length} proyectos · ${prod} en producción`;
+  filtros();pintar();
+}).catch(()=>{$('#resumen').textContent='No se pudo leer proyectos.json (abrilo desde un servidor, no con doble clic).'});
+</script>
+</body>
+</html>
