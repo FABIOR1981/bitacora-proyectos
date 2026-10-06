@@ -65,6 +65,9 @@ exports.handler = async (ev) => {
     if (ev.httpMethod === 'GET' && q.doc) return await abrir(q);
     const cuerpo = ev.httpMethod === 'POST' ? JSON.parse(ev.body || '{}') : {};
 
+    if (ev.httpMethod !== 'POST') return resp(405, { error: 'Método no permitido' });
+    if (!claveOk(cuerpo.clave)) return resp(401, { error: 'Clave inválida' });
+
     if (cuerpo.accion === 'docs' || cuerpo.accion === 'bajar') {
       if (!repoOk(cuerpo.repo)) return resp(400, { error: 'Repositorio inválido' });
       return cuerpo.accion === 'docs' ? await listar(cuerpo.repo) : await bajar(cuerpo.repo, cuerpo.ruta);
@@ -73,11 +76,9 @@ exports.handler = async (ev) => {
     const meta = await fetch(`${API}?ref=${RAMA}`, { headers: cab() });
     if (!meta.ok) return resp(502, { error: 'GitHub respondió ' + meta.status });
     const m = await meta.json();
-    if (ev.httpMethod === 'GET') return resp(200, Buffer.from(m.content, 'base64').toString('utf8'));
-    if (ev.httpMethod !== 'POST') return resp(405, { error: 'Método no permitido' });
+    if (cuerpo.accion === 'listar') return resp(200, Buffer.from(m.content, 'base64').toString('utf8'));
 
-    const { clave, datos } = cuerpo;
-    if (!claveOk(clave)) return resp(401, { error: 'Clave inválida' });
+    const { datos } = cuerpo;
     if (!datos || !Array.isArray(datos.proyectos)) return resp(400, { error: 'Datos inválidos' });
 
     const put = await fetch(API, {

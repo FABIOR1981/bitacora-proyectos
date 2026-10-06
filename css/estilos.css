@@ -44,6 +44,8 @@ h2{font-size:1.3rem;font-weight:700;letter-spacing:-.02em;word-break:break-word}
 .vacio{color:var(--mu);font-family:var(--fm);padding:40px 0}
 dialog{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:26px;width:min(440px,92vw);margin:auto}
 dialog::backdrop{background:#0009}
+#dEntrada::backdrop{background:#000b;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.bloqueado{filter:blur(18px);pointer-events:none;user-select:none}
 dialog form{display:grid;gap:12px}
 dialog label{font:500 .75rem var(--fm);color:var(--mu);display:grid;gap:6px}
 dialog h2{font-size:1.4rem;letter-spacing:-.02em}

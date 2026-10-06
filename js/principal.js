@@ -1,9 +1,9 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.5.4'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.6.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
-let dens=(()=>{try{const d=localStorage.getItem('densidad');return d==='b'?'b':'a'}catch(e){return 'a'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
+let dens=(()=>{try{const d=localStorage.getItem('densidad');return d==='b'?'b':'a'}catch(e){return 'a'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',acceso='',editId=null,nombreFantasiaEditada=false;
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const seguro=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
@@ -31,7 +31,8 @@ async function descifrar(b,pw){const a=Uint8Array.from(atob(b),c=>c.charCodeAt(0
 
 /* --- servidor (Netlify Function) --- */
 async function cargar(){
-  const r=await fetch(API,{cache:'no-store'});
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accion:'listar',clave:acceso})});
+  if(r.status===401)throw new Error('401');
   if(!r.ok)throw new Error('Servidor '+r.status);
   const j=await r.json();verificador=j.verificador||'';datos=(j.proyectos||[]).map(p=>({...p,nombre_fantasia:p.nombre_fantasia||p.nombre}));
 }
@@ -138,7 +139,15 @@ $('#fEd').onsubmit=async e=>{
 };
 
 aplicarDens();
-cargar().then(modo).catch(()=>{$('#resumen').textContent='No se pudo leer el JSON de GitHub. Revisá la función de Netlify y sus variables de entorno.'});
+/* --- entrada: no se ve nada hasta validar la contraseña en el servidor --- */
+const bloquear=on=>{$('main').classList.toggle('bloqueado',on);$('#menuMovil').classList.toggle('bloqueado',on)};
+$('#dEntrada').addEventListener('cancel',e=>e.preventDefault());
+$('#fEntrada').onsubmit=async e=>{
+  e.preventDefault();acceso=$('#pwEntrada').value.trim();$('#avEntrada').textContent='Verificando…';
+  try{await cargar();modo();bloquear(false);$('#dEntrada').close()}
+  catch(er){acceso='';$('#avEntrada').textContent=er.message==='401'?'Contraseña incorrecta.':'No se pudo leer el JSON de GitHub. Revisá la función de Netlify y sus variables de entorno.'}
+};
+$('#resumen').textContent='Acceso protegido';bloquear(true);$('#dEntrada').showModal();
 
 $('#nuevo').innerHTML=I.plus+' Nuevo';$('#tema').innerHTML=I.tema;$('#tema').setAttribute('aria-label','Cambiar tema claro/oscuro');
 
@@ -163,7 +172,7 @@ $('#version').textContent='Bitácora v'+VERSION;
 /* --- documentación (de cada repo, en documentacion-central/<repo>/documentacion) --- */
 let docsRepo='';
 const repoDe=u=>(u||'').replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');
-const apiPost=c=>fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clave,...c})});
+const apiPost=c=>fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clave:acceso,...c})});
 const tam=n=>n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':(n/1048576).toFixed(1)+' MB';
 async function verDocs(id){
   const p=datos.find(x=>x.id===id);if(!p)return;
