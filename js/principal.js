@@ -1,6 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.6.0'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.6.1'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let dens=(()=>{try{const d=localStorage.getItem('densidad');return d==='b'?'b':'a'}catch(e){return 'a'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',acceso='',editId=null,nombreFantasiaEditada=false;
@@ -35,6 +35,7 @@ async function cargar(){
   if(r.status===401)throw new Error('401');
   if(!r.ok)throw new Error('Servidor '+r.status);
   const j=await r.json();verificador=j.verificador||'';datos=(j.proyectos||[]).map(p=>({...p,nombre_fantasia:p.nombre_fantasia||p.nombre}));
+  await Promise.all(datos.map(async p=>{if(p.urlCifrado)try{p.url=await descifrar(p.urlCifrado,acceso)}catch{}}));
 }
 async function guardar(){
   const limpio=await Promise.all(datos.map(async p=>{const {repo,url,urlCifrado,...o}=p;o.repoCifrado=repo?await cifrar(repo,clave):'';o.docs=repoDe(repo);
@@ -58,11 +59,10 @@ function pintar(){
   const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(nombreVisible(p)+' '+p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q)).sort(comparar);
   $('#lista').innerHTML=v.length?v.map((p,i)=>{
     const r=admin?seguro(p.repo):'',u=seguro(p.url);
-    const bloq=!admin&&p.fase==='produccion'&&(p.url||p.urlCifrado);
     return `<article class="card" title="${esc(p.descripcion)}" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
       <span class="fase" title="${esc(FASES[p.fase]||p.fase)}"><i></i><em class="t">${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</em></span>
       <h2>${esc(nombreVisible(p))}</h2><p class="desc">${esc(p.descripcion)}</p>
-      <div class="links${admin?' admin':''}">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock}<em class="t">Sitio</em></span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext}<em class="t">Sitio</em></a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo}<em class="t">Repo</em></a>`:'<span>sin repo</span>'):''}
+      <div class="links${admin?' admin':''}">${u?`<a href="${u}" target="_blank" rel="noopener">${I.ext}<em class="t">Sitio</em></a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo}<em class="t">Repo</em></a>`:'<span>sin repo</span>'):''}
       ${p.nombre?`<button data-docs="${esc(p.id)}">${I.doc}<em class="t">Docs</em></button>`:''}${admin?`<button data-ed="${esc(p.id)}">${I.edit}<em class="t">Editar</em></button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;
