@@ -32,6 +32,7 @@ Configurar estas variables de entorno en Netlify:
 |---|---|
 | `GITHUB_TOKEN` | Token de GitHub con permiso de lectura y escritura sobre el repositorio de datos. |
 | `CLAVE_ADMIN` | Contraseña del modo admin. |
+| `GITHUB_TOKEN_DOCUMENTACION_CENTRAL` | Token de GitHub con permiso de lectura sobre `FABIOR1981/documentacion-central`, de donde el botón **Docs** toma la documentación de cada proyecto (`<repo>/documentacion/`). Si no está, se usa `GITHUB_TOKEN`. |
 | `GITHUB_REPO` | Opcional. Repositorio donde está el JSON. Si no se define, se usa `FABIOR1981/bd`. |
 
 ## Estructura

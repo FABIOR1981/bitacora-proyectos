@@ -145,7 +145,7 @@ $('#mLlave').onclick=()=>$('#llave').click();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('servicio.js?v='+VERSION).catch(()=>{}));
 $('#version').textContent='Bitácora v'+VERSION;
 
-/* --- documentación (carpeta "documentacion" de cada repo, solo admin) --- */
+/* --- documentación (de cada repo, en documentacion-central/<repo>/documentacion; solo admin) --- */
 let docsRepo='';
 const repoDe=u=>(u||'').replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');
 const apiPost=c=>fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clave,...c})});
@@ -157,7 +157,7 @@ async function verDocs(id){
   try{
     const r=await apiPost({accion:'docs',repo:docsRepo}),j=await r.json();
     if(!r.ok)throw new Error(j.error||'Error '+r.status);
-    $('#listaDocs').innerHTML=j.archivos.length?j.archivos.map(a=>`<div class="doc"><span>${esc(a.nombre)}<small>${tam(a.tam)}</small></span><button class="btn" data-bajar="${esc(a.ruta)}" data-nom="${esc(a.nombre)}">${I.down} Descargar</button></div>`).join(''):'<p class="vacio">Sin carpeta documentacion, o está vacía.</p>';
+    $('#listaDocs').innerHTML=j.archivos.length?j.archivos.map(a=>`<div class="doc"><span>${esc(a.nombre)}<small>${tam(a.tam)}</small></span><button class="btn" data-bajar="${esc(a.ruta)}" data-nom="${esc(a.nombre)}">${I.down} Descargar</button></div>`).join(''):'<p class="vacio">Sin documentación en documentacion-central para este proyecto.</p>';
   }catch(e){$('#listaDocs').innerHTML=`<p class="aviso">${esc(e.message)}</p>`}
 }
 $('#listaDocs').onclick=async e=>{
