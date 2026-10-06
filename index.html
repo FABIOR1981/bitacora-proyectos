@@ -163,7 +163,9 @@ $('#llave').onclick=()=>{
   $('#pw').value='';$('#avClave').textContent='';$('#dClave').showModal();$('#pw').focus();
 };
 $('#fClave').onsubmit=async e=>{
-  e.preventDefault();const pw=$('#pw').value;$('#avClave').textContent='Verificando…';
+  e.preventDefault();const pw=$('#pw').value.trim();
+  if(!verificador){$('#avClave').textContent='El JSON cargado no es el nuevo (falta "verificador"). Subí bitacora/proyectos.json a bd y recargá con Ctrl+F5.';return}
+  $('#avClave').textContent='Verificando…';
   try{
     await descifrar(verificador,pw);
     clave=pw;
