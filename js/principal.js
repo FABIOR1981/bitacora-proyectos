@@ -1,6 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.0.0'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.1.1'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null;
@@ -33,7 +33,8 @@ async function cargar(){
   const j=await r.json();verificador=j.verificador||'';datos=j.proyectos||[];
 }
 async function guardar(){
-  const limpio=await Promise.all(datos.map(async p=>{const {repo,...o}=p;o.repoCifrado=repo?await cifrar(repo,clave):'';return o}));
+  const limpio=await Promise.all(datos.map(async p=>{const {repo,url,urlCifrado,...o}=p;o.repoCifrado=repo?await cifrar(repo,clave):'';
+    if(p.fase==='produccion'&&url){o.urlCifrado=await cifrar(url,clave);o.url=''}else o.url=url||'';return o}));
   const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clave,datos:{verificador,proyectos:limpio}})});
   if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Error '+r.status)}
 }
@@ -51,10 +52,11 @@ function pintar(){
   const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q)).sort(comparar);
   $('#lista').innerHTML=v.length?v.map((p,i)=>{
     const r=admin?seguro(p.repo):'',u=seguro(p.url);
+    const bloq=!admin&&p.fase==='produccion'&&(p.url||p.urlCifrado);
     return `<article class="card" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
       <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</span>
       <h2>${esc(p.nombre)}</h2><p class="desc">${esc(p.descripcion)}</p>
-      <div class="links">${u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
+      <div class="links">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock} Sitio</span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
       ${admin?`<button data-ed="${esc(p.id)}">Editar</button><button class="del" data-del="${esc(p.id)}">Borrar</button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;
@@ -76,7 +78,7 @@ $('#tema').onclick=()=>{const r=document.documentElement,o=matchMedia('(prefers-
 document.querySelectorAll('[data-cerrar]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 
 $('#llave').onclick=()=>{
-  if(admin){admin=false;clave='';datos.forEach(p=>delete p.repo);modo();return}
+  if(admin){admin=false;clave='';modo();cargar().catch(()=>{}).then(modo);return}
   $('#pw').value='';$('#avClave').textContent='';$('#dClave').showModal();$('#pw').focus();
 };
 $('#fClave').onsubmit=async e=>{
@@ -86,7 +88,7 @@ $('#fClave').onsubmit=async e=>{
   try{
     await descifrar(verificador,pw);
     clave=pw;
-    await Promise.all(datos.map(async p=>{p.repo=p.repoCifrado?await descifrar(p.repoCifrado,pw):''}));
+    await Promise.all(datos.map(async p=>{p.repo=p.repoCifrado?await descifrar(p.repoCifrado,pw):'';if(p.urlCifrado)p.url=await descifrar(p.urlCifrado,pw)}));
     admin=true;$('#dClave').close();modo();
   }catch{$('#avClave').textContent='Contraseña incorrecta.'}
 };

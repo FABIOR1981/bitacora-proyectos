@@ -85,3 +85,5 @@ html{scrollbar-color:var(--bd) var(--bg);scrollbar-width:thin}
 }
 
 .pie{margin-top:48px;text-align:center;color:var(--mu);font:400 .75rem var(--fm);font-variant-numeric:tabular-nums}
+
+.links .bloq{color:var(--mu);border-style:solid;opacity:.85}

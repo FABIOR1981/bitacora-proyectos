@@ -3,7 +3,8 @@ const CACHE = 'bitacora-' + (new URL(self.location).searchParams.get('v') || '0'
 const BASE = ['./', './index.html', './css/estilos.css', './js/principal.js', './manifest.webmanifest', './iconos/icono-192.png', './iconos/icono-512.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting()));
+  // si falta algún archivo, la instalación no se cae: se guarda lo que haya
+  e.waitUntil(caches.open(CACHE).then(c => Promise.all(BASE.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
