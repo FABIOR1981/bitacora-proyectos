@@ -7,6 +7,7 @@ const RAMA = 'main';
 const API = `https://api.github.com/repos/${REPO}/contents/${RUTA}`;
 const DOCS_REPO = process.env.DOCS_REPO || 'FABIOR1981/documentacion-central';
 const MIME = { pdf: 'application/pdf', md: 'text/markdown; charset=utf-8', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', txt: 'text/plain; charset=utf-8' };
+const esPdf = n => /\.pdf$/i.test(String(n || '')); // solo se muestran y sirven PDF
 const MAX_BYTES = 4 * 1024 * 1024; // tope de descarga por la función
 const VIGENCIA_ENLACE = 15 * 60; // segundos que dura el enlace de un documento
 const VER_EN_NAVEGADOR = ['pdf', 'md', 'txt']; // se abren en el navegador; el resto se descarga
@@ -20,8 +21,8 @@ const repoOk = r => /^FABIOR1981\/[\w.-]+$/.test(r || '');
 const carpetaDocs = repo => repo.split('/')[1].replace(/\.git$/, '') + '/documentacion';
 const firma = (ruta, exp) => crypto.createHmac('sha256', process.env.CLAVE_ADMIN).update(ruta + '|' + exp).digest('hex');
 const enlace = ruta => { const exp = Math.floor(Date.now() / 1000) + VIGENCIA_ENLACE; return `/.netlify/functions/bitacora?doc=${encodeURIComponent(ruta)}&exp=${exp}&f=${firma(ruta, exp)}`; };
-const enlaceOk = q => /^[\w.-]+\/documentacion\/[^/]+$/.test(q.doc || '') && !q.doc.includes('..') && Number(q.exp) > Date.now() / 1000 && igual(q.f || '', firma(q.doc, q.exp));
-const rutaOk = (repo, p) => String(p || '').startsWith(carpetaDocs(repo) + '/') && String(p).length > carpetaDocs(repo).length + 1 && !String(p).includes('..');
+const enlaceOk = q => /^[\w.-]+\/documentacion\/[^/]+$/.test(q.doc || '') && !q.doc.includes('..') && esPdf(q.doc) && Number(q.exp) > Date.now() / 1000 && igual(q.f || '', firma(q.doc, q.exp));
+const rutaOk = (repo, p) => String(p || '').startsWith(carpetaDocs(repo) + '/') && String(p).length > carpetaDocs(repo).length + 1 && !String(p).includes('..') && esPdf(p);
 
 // Lista los archivos de "<repo>/documentacion" en el repositorio documentacion-central
 async function listar(repo) {
@@ -29,7 +30,7 @@ async function listar(repo) {
   if (r.status === 404) return resp(200, { archivos: [] });
   if (!r.ok) return resp(502, { error: 'GitHub respondió ' + r.status + ' (¿el token tiene acceso a documentacion-central?)' });
   const lista = await r.json();
-  const archivos = (Array.isArray(lista) ? lista : []).filter(f => f.type === 'file')
+  const archivos = (Array.isArray(lista) ? lista : []).filter(f => f.type === 'file' && esPdf(f.name))
     .map(f => ({ nombre: f.name, ruta: f.path, tam: f.size, url: enlace(f.path) })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   return resp(200, { archivos });
 }

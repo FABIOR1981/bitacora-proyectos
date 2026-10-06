@@ -1,6 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.5.0'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.5.1'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let dens=(()=>{try{const d=localStorage.getItem('densidad');return d==='b'?'b':'a'}catch(e){return 'a'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
@@ -172,6 +172,6 @@ async function verDocs(id){
   try{
     const r=await apiPost({accion:'docs',repo:docsRepo}),j=await r.json();
     if(!r.ok)throw new Error(j.error||'Error '+r.status);
-    $('#listaDocs').innerHTML=j.archivos.length?j.archivos.map(a=>`<div class="doc"><span>${esc(a.nombre)}<small>${tam(a.tam)}</small></span><a class="btn" href="${esc(a.url)}" target="_blank" rel="noopener">${I.down} Abrir</a></div>`).join(''):'<p class="vacio">Sin documentación en documentacion-central para este proyecto.</p>';
+    $('#listaDocs').innerHTML=j.archivos.length?j.archivos.map(a=>`<div class="doc"><span>${esc(a.nombre)}<small>${tam(a.tam)}</small></span><a class="btn" href="${esc(a.url)}" target="_blank" rel="noopener">${I.down} Abrir</a></div>`).join(''):'<p class="vacio">Sin PDF en documentacion-central para este proyecto.</p>';
   }catch(e){$('#listaDocs').innerHTML=`<p class="aviso">${esc(e.message)}</p>`}
 }
