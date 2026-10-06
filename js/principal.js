@@ -3,7 +3,7 @@ const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'P
 const VERSION='1.3.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
-let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null;
+let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null,nombreFantasiaEditada=false;
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const seguro=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
@@ -32,7 +32,7 @@ async function descifrar(b,pw){const a=Uint8Array.from(atob(b),c=>c.charCodeAt(0
 async function cargar(){
   const r=await fetch(API,{cache:'no-store'});
   if(!r.ok)throw new Error('Servidor '+r.status);
-  const j=await r.json();verificador=j.verificador||'';datos=j.proyectos||[];
+  const j=await r.json();verificador=j.verificador||'';datos=(j.proyectos||[]).map(p=>({...p,nombre_fantasia:p.nombre_fantasia||p.nombre}));
 }
 async function guardar(){
   const limpio=await Promise.all(datos.map(async p=>{const {repo,url,urlCifrado,...o}=p;o.repoCifrado=repo?await cifrar(repo,clave):'';
@@ -47,17 +47,18 @@ function filtros(){
   $('#filtros').innerHTML=['todas',...Object.keys(FASES)].filter(f=>f==='todas'||n(f)).map(f=>`<button class="chip" data-f="${f}" aria-pressed="${f===faseActiva}">${f==='todas'?'Todas':FASES[f]} <b>${n(f)}</b></button>`).join('');
 }
 const rango=f=>{const i=Object.keys(FASES).indexOf(f);return i<0?99:i};
-const porNombre=(a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base',numeric:true});
+const nombreVisible=p=>p.nombre_fantasia||p.nombre;
+const porNombre=(a,b)=>nombreVisible(a).localeCompare(nombreVisible(b),'es',{sensitivity:'base',numeric:true});
 const comparar=(a,b)=>(orden==='estado'?(rango(a.fase)-rango(b.fase))||porNombre(a,b):porNombre(a,b))*dir;
 function pintar(){
   const q=$('#buscar').value.trim().toLowerCase();
-  const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q)).sort(comparar);
+  const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(nombreVisible(p)+' '+p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q)).sort(comparar);
   $('#lista').innerHTML=v.length?v.map((p,i)=>{
     const r=admin?seguro(p.repo):'',u=seguro(p.url);
     const bloq=!admin&&p.fase==='produccion'&&(p.url||p.urlCifrado);
     return `<article class="card" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
       <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</span>
-      <h2>${esc(p.nombre)}</h2><p class="desc">${esc(p.descripcion)}</p>
+      <h2>${esc(nombreVisible(p))}</h2><p class="desc">${esc(p.descripcion)}</p>
       <div class="links">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock} Sitio</span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
       ${admin?`${p.repo?`<button data-docs="${esc(p.id)}">${I.doc} Docs</button>`:''}<button data-ed="${esc(p.id)}">Editar</button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
@@ -97,12 +98,15 @@ $('#fClave').onsubmit=async e=>{
 $('#eFase').innerHTML=Object.entries(FASES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
 function abrirEd(id){
   editId=id;const p=datos.find(x=>x.id===id)||{fase:'desarrollo'};
+  nombreFantasiaEditada=!!id;
   $('#tEd').textContent=id?'Editar proyecto':'Nuevo proyecto';
-  $('#eNombre').value=p.nombre||'';$('#eDesc').value=p.descripcion||'';$('#eRepo').value=p.repo||'';
+  $('#eNombre').value=p.nombre||'';$('#eNombre').readOnly=!!id;$('#eFantasia').value=p.nombre_fantasia||p.nombre||'';$('#eDesc').value=p.descripcion||'';$('#eRepo').value=p.repo||'';
   $('#eUrl').value=p.url||'';$('#eFase').value=p.fase;$('#ePriv').checked=!!p.privado;$('#avEd').textContent='';
   $('#bEd').hidden=!id;
   $('#dEd').showModal();
 }
+$('#eNombre').oninput=()=>{if(!editId&&!nombreFantasiaEditada)$('#eFantasia').value=$('#eNombre').value};
+$('#eFantasia').oninput=()=>{nombreFantasiaEditada=true};
 $('#nuevo').onclick=()=>abrirEd(null);
 $('#lista').onclick=async e=>{
   const dc=e.target.closest('[data-docs]');if(dc)return verDocs(dc.dataset.docs);
@@ -119,7 +123,9 @@ $('#bEd').onclick=async()=>{
 };
 $('#fEd').onsubmit=async e=>{
   e.preventDefault();const g=$('#gEd');g.disabled=true;$('#avEd').textContent='Guardando…';
-  const nuevo={id:editId||crypto.randomUUID().slice(0,8),nombre:$('#eNombre').value.trim(),descripcion:$('#eDesc').value.trim(),
+  const anterior=datos.find(p=>p.id===editId),nombreInterno=anterior?anterior.nombre:$('#eNombre').value.trim();
+  const nuevo={...(anterior||{}),id:anterior?anterior.id:crypto.randomUUID().slice(0,8),nombre:nombreInterno,
+    nombre_fantasia:$('#eFantasia').value.trim()||nombreInterno,descripcion:$('#eDesc').value.trim(),
     repo:$('#eRepo').value.trim(),url:$('#eUrl').value.trim(),fase:$('#eFase').value,privado:$('#ePriv').checked};
   const copia=[...datos];
   datos=editId?datos.map(p=>p.id===editId?nuevo:p):[nuevo,...datos];
@@ -158,7 +164,7 @@ const tam=n=>n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':(n/1048576).toFixe
 async function verDocs(id){
   const p=datos.find(x=>x.id===id);if(!p)return;
   docsRepo=repoDe(p.repo);
-  $('#tDocs').textContent='Documentación · '+p.nombre;$('#listaDocs').innerHTML='<p class="vacio">Buscando…</p>';$('#dDocs').showModal();
+  $('#tDocs').textContent='Documentación · '+nombreVisible(p);$('#listaDocs').innerHTML='<p class="vacio">Buscando…</p>';$('#dDocs').showModal();
   try{
     const r=await apiPost({accion:'docs',repo:docsRepo}),j=await r.json();
     if(!r.ok)throw new Error(j.error||'Error '+r.status);
