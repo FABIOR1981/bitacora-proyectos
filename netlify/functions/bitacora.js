@@ -66,7 +66,6 @@ exports.handler = async (ev) => {
     const cuerpo = ev.httpMethod === 'POST' ? JSON.parse(ev.body || '{}') : {};
 
     if (cuerpo.accion === 'docs' || cuerpo.accion === 'bajar') {
-      if (!claveOk(cuerpo.clave)) return resp(401, { error: 'Clave inválida' });
       if (!repoOk(cuerpo.repo)) return resp(400, { error: 'Repositorio inválido' });
       return cuerpo.accion === 'docs' ? await listar(cuerpo.repo) : await bajar(cuerpo.repo, cuerpo.ruta);
     }
