@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bitácora de proyectos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
@@ -14,8 +14,8 @@
   <div><h1>Bitácora<br>de proyectos</h1><p class="sub" id="resumen">Cargando…</p></div>
   <div class="acc">
     <button class="btn" id="nuevo" hidden>+ Nuevo</button>
-    <button class="btn" id="llave" aria-pressed="false">🔒 Admin</button>
-    <button class="btn" id="tema">◐</button>
+    <button class="btn" id="llave" aria-pressed="false">Admin</button>
+    <button class="btn" id="tema"></button>
   </div>
 </header>
 <div class="barra">
@@ -27,12 +27,12 @@
 <section class="grid" id="lista" aria-live="polite"></section>
 </main>
 
-<dialog id="dClave"><form method="dialog" id="fClave"><h3>Modo admin</h3>
+<dialog id="dClave"><form method="dialog" id="fClave"><h2>Modo admin</h2>
   <label>Contraseña<input type="password" id="pw" autocomplete="current-password" required></label>
   <p class="aviso" id="avClave"></p>
   <div class="fila"><button type="button" class="btn" data-cerrar>Cancelar</button><button class="btn prim">Entrar</button></div></form></dialog>
 
-<dialog id="dEd"><form method="dialog" id="fEd"><h3 id="tEd">Proyecto</h3>
+<dialog id="dEd"><form method="dialog" id="fEd"><h2 id="tEd">Proyecto</h2>
   <label>Nombre<input id="eNombre" required></label>
   <label>Descripción<textarea id="eDesc" rows="2"></textarea></label>
   <label>Repositorio (GitHub)<input id="eRepo" placeholder="https://github.com/FABIOR1981/…"></label>

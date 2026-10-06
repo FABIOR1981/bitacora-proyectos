@@ -8,6 +8,15 @@ const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const seguro=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('v');setTimeout(()=>t.classList.remove('v'),2400)};
 
+/* --- iconos (trazo único) --- */
+const svg=d=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const I={lock:svg('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
+unlock:svg('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>'),
+plus:svg('<path d="M12 5v14M5 12h14"/>'),
+tema:svg('<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>'),
+ext:svg('<path d="M7 17 17 7M8 7h9v9"/>'),
+repo:svg('<path d="M6 3v12"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M18 8.5a9 9 0 0 1-9 9"/>')};
+
 /* --- cifrado (AES-GCM + PBKDF2) --- */
 const enc=new TextEncoder(),dec=new TextDecoder();
 async function derivar(pw,salt){const m=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
@@ -40,9 +49,9 @@ function pintar(){
   $('#lista').innerHTML=v.length?v.map((p,i)=>{
     const r=admin?seguro(p.repo):'',u=seguro(p.url);
     return `<article class="card" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
-      <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?' · 🔒 privado':''}</span>
+      <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</span>
       <h2>${esc(p.nombre)}</h2><p class="desc">${esc(p.descripcion)}</p>
-      <div class="links">${u?`<a href="${u}" target="_blank" rel="noopener">↗ Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">⌥ Repo</a>`:'<span>sin repo</span>'):''}
+      <div class="links">${u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
       ${admin?`<button data-ed="${esc(p.id)}">Editar</button><button class="del" data-del="${esc(p.id)}">Borrar</button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;
@@ -50,7 +59,7 @@ function pintar(){
 }
 function modo(){
   $('#nuevo').hidden=!admin;
-  const l=$('#llave');l.textContent=admin?'🔓 Salir':'🔒 Admin';l.classList.toggle('on',admin);
+  const l=$('#llave');l.innerHTML=admin?I.unlock+' Salir':I.lock+' Admin';l.classList.toggle('on',admin);
   filtros();pintar();
 }
 
@@ -106,3 +115,5 @@ $('#fEd').onsubmit=async e=>{
 };
 
 cargar().then(modo).catch(()=>{$('#resumen').textContent='No se pudo leer el JSON de GitHub. Revisá la función de Netlify y sus variables de entorno.'});
+
+$('#nuevo').innerHTML=I.plus+' Nuevo';$('#tema').innerHTML=I.tema;$('#tema').setAttribute('aria-label','Cambiar tema claro/oscuro');
