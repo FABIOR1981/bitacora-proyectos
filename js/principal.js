@@ -1,5 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
+const VERSION='1.0.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null;
@@ -136,4 +137,5 @@ $('#mNuevo').onclick=()=>$('#nuevo').click();
 $('#mLlave').onclick=()=>$('#llave').click();
 
 /* --- instalable (PWA) --- */
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('servicio.js').catch(()=>{}));
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('servicio.js?v='+VERSION).catch(()=>{}));
+$('#version').textContent='Bitácora v'+VERSION;

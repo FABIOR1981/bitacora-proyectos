@@ -1,5 +1,5 @@
 // Service worker: guarda la estructura de la app y deja ver la última lista sin conexión.
-const CACHE = 'bitacora-v1';
+const CACHE = 'bitacora-' + (new URL(self.location).searchParams.get('v') || '0'); // la versión viene de js/principal.js
 const BASE = ['./', './index.html', './css/estilos.css', './js/principal.js', './manifest.webmanifest', './iconos/icono-192.png', './iconos/icono-512.png'];
 
 self.addEventListener('install', e => {

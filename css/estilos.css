@@ -83,3 +83,5 @@ html{scrollbar-color:var(--bd) var(--bg);scrollbar-width:thin}
   #menuMovil button .i{width:22px;height:22px}
   #menuMovil button.on,#menuMovil button[aria-pressed=true]{color:var(--tx);background:color-mix(in srgb,var(--ac) 10%,transparent)}
 }
+
+.pie{margin-top:48px;text-align:center;color:var(--mu);font:400 .75rem var(--fm);font-variant-numeric:tabular-nums}
