@@ -134,3 +134,6 @@ $('#mOrden').onclick=()=>{
 $('#mTema').onclick=()=>$('#tema').click();
 $('#mNuevo').onclick=()=>$('#nuevo').click();
 $('#mLlave').onclick=()=>$('#llave').click();
+
+/* --- instalable (PWA) --- */
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('servicio.js').catch(()=>{}));
