@@ -59,7 +59,7 @@ function pintar(){
     return `<article class="card" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
       <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</span>
       <h2>${esc(nombreVisible(p))}</h2><p class="desc">${esc(p.descripcion)}</p>
-      <div class="links">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock} Sitio</span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
+      <div class="links${admin?' admin':''}">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock} Sitio</span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
       ${admin?`${p.repo?`<button data-docs="${esc(p.id)}">${I.doc} Docs</button>`:''}<button data-ed="${esc(p.id)}">Editar</button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;

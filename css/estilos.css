@@ -33,6 +33,9 @@ h2{font-size:1.3rem;font-weight:700;letter-spacing:-.02em;word-break:break-word}
 .desc{color:var(--mu);font-size:.92rem;line-height:1.45;flex:1}
 .links{display:flex;gap:8px;flex-wrap:wrap}
 .links a,.links span,.links button{font:500 .75rem var(--fm);padding:7px 12px;border-radius:8px;border:1px solid var(--bd);color:var(--tx);text-decoration:none;background:none;cursor:pointer}
+.links.admin{gap:5px;flex-wrap:nowrap}
+.links.admin a,.links.admin span,.links.admin button{flex:1 1 0;min-width:0;justify-content:center;white-space:nowrap;padding:7px 4px;gap:4px;font-size:.7rem}
+.links.admin .i{width:13px;height:13px}
 .links a:hover,.links button:hover{background:var(--ac);color:var(--bg)}
 .links span{color:var(--mu);border-style:dashed;cursor:default}
 .btn.del{margin-right:auto;color:#dc2626;border-color:color-mix(in srgb,#dc2626 45%,var(--bd))}
