@@ -2,7 +2,7 @@
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
-let datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null;
+let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null;
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const seguro=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
@@ -31,9 +31,12 @@ function filtros(){
   const n=f=>f==='todas'?datos.length:datos.filter(p=>p.fase===f).length;
   $('#filtros').innerHTML=['todas',...Object.keys(FASES)].filter(f=>f==='todas'||n(f)).map(f=>`<button class="chip" data-f="${f}" aria-pressed="${f===faseActiva}">${f==='todas'?'Todas':FASES[f]} <b>${n(f)}</b></button>`).join('');
 }
+const rango=f=>{const i=Object.keys(FASES).indexOf(f);return i<0?99:i};
+const porNombre=(a,b)=>a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base',numeric:true});
+const comparar=(a,b)=>(orden==='estado'?(rango(a.fase)-rango(b.fase))||porNombre(a,b):porNombre(a,b))*dir;
 function pintar(){
   const q=$('#buscar').value.trim().toLowerCase();
-  const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q));
+  const v=datos.filter(p=>(faseActiva==='todas'||p.fase===faseActiva)&&(p.nombre+' '+(p.descripcion||'')).toLowerCase().includes(q)).sort(comparar);
   $('#lista').innerHTML=v.length?v.map((p,i)=>{
     const r=admin?seguro(p.repo):'',u=seguro(p.url);
     return `<article class="card" style="--c:var(--${esc(p.fase)},var(--mu));animation-delay:${i*30}ms">
@@ -54,6 +57,8 @@ function modo(){
 /* --- eventos --- */
 $('#filtros').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;faseActiva=b.dataset.f;filtros();pintar()};
 $('#buscar').oninput=pintar;
+$('#orden').onchange=e=>{orden=e.target.value;pintar()};
+$('#dir').onclick=()=>{dir*=-1;$('#dir').textContent=dir>0?'↑ Asc':'↓ Desc';pintar()};
 $('#tema').onclick=()=>{const r=document.documentElement,o=matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.tema=(r.dataset.tema||(o?'oscuro':'claro'))==='oscuro'?'claro':'oscuro'};
 document.querySelectorAll('[data-cerrar]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 
