@@ -1,6 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.1.1'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.2.0'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',editId=null;
@@ -18,6 +18,8 @@ tema:svg('<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="c
 ext:svg('<path d="M7 17 17 7M8 7h9v9"/>'),
 search:svg('<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>'),
 sort:svg('<path d="M7 4v16M4 17l3 3 3-3M17 20V4m-3 3 3-3 3 3"/>'),
+doc:svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'),
+down:svg('<path d="M12 4v11m-4-4 4 4 4-4M5 20h14"/>'),
 repo:svg('<path d="M6 3v12"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M18 8.5a9 9 0 0 1-9 9"/>')};
 
 /* --- cifrado (AES-GCM + PBKDF2) --- */
@@ -57,7 +59,7 @@ function pintar(){
       <span class="fase"><i></i>${esc(FASES[p.fase]||p.fase)}${p.privado&&admin?` · ${I.lock} privado`:''}</span>
       <h2>${esc(p.nombre)}</h2><p class="desc">${esc(p.descripcion)}</p>
       <div class="links">${bloq?`<span class="bloq" title="Disponible en modo admin">${I.lock} Sitio</span>`:u?`<a href="${u}" target="_blank" rel="noopener">${I.ext} Sitio</a>`:'<span>sin URL</span>'}${admin?(r?`<a href="${r}" target="_blank" rel="noopener">${I.repo} Repo</a>`:'<span>sin repo</span>'):''}
-      ${admin?`<button data-ed="${esc(p.id)}">Editar</button><button class="del" data-del="${esc(p.id)}">Borrar</button>`:''}</div>
+      ${admin?`${p.repo?`<button data-docs="${esc(p.id)}">${I.doc} Docs</button>`:''}<button data-ed="${esc(p.id)}">Editar</button><button class="del" data-del="${esc(p.id)}">Borrar</button>`:''}</div>
     </article>`}).join(''):'<p class="vacio">Sin resultados.</p>';
   const prod=datos.filter(p=>p.fase==='produccion').length;
   $('#resumen').textContent=`${datos.length} proyectos · ${prod} en producción${admin?' · modo admin':''}`;
@@ -102,6 +104,7 @@ function abrirEd(id){
 }
 $('#nuevo').onclick=()=>abrirEd(null);
 $('#lista').onclick=async e=>{
+  const dc=e.target.closest('[data-docs]');if(dc)return verDocs(dc.dataset.docs);
   const ed=e.target.closest('[data-ed]'),del=e.target.closest('[data-del]');
   if(ed)return abrirEd(ed.dataset.ed);
   if(del&&confirm('¿Borrar este proyecto?')){
@@ -141,3 +144,29 @@ $('#mLlave').onclick=()=>$('#llave').click();
 /* --- instalable (PWA) --- */
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('servicio.js?v='+VERSION).catch(()=>{}));
 $('#version').textContent='Bitácora v'+VERSION;
+
+/* --- documentación (carpeta "documentacion" de cada repo, solo admin) --- */
+let docsRepo='';
+const repoDe=u=>(u||'').replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');
+const apiPost=c=>fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clave,...c})});
+const tam=n=>n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':(n/1048576).toFixed(1)+' MB';
+async function verDocs(id){
+  const p=datos.find(x=>x.id===id);if(!p)return;
+  docsRepo=repoDe(p.repo);
+  $('#tDocs').textContent='Documentación · '+p.nombre;$('#listaDocs').innerHTML='<p class="vacio">Buscando…</p>';$('#dDocs').showModal();
+  try{
+    const r=await apiPost({accion:'docs',repo:docsRepo}),j=await r.json();
+    if(!r.ok)throw new Error(j.error||'Error '+r.status);
+    $('#listaDocs').innerHTML=j.archivos.length?j.archivos.map(a=>`<div class="doc"><span>${esc(a.nombre)}<small>${tam(a.tam)}</small></span><button class="btn" data-bajar="${esc(a.ruta)}" data-nom="${esc(a.nombre)}">${I.down} Descargar</button></div>`).join(''):'<p class="vacio">Sin carpeta documentacion, o está vacía.</p>';
+  }catch(e){$('#listaDocs').innerHTML=`<p class="aviso">${esc(e.message)}</p>`}
+}
+$('#listaDocs').onclick=async e=>{
+  const b=e.target.closest('[data-bajar]');if(!b)return;b.disabled=true;
+  try{
+    const r=await apiPost({accion:'bajar',repo:docsRepo,ruta:b.dataset.bajar});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||'Error '+r.status);
+    const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');
+    a.href=url;a.download=b.dataset.nom;a.click();setTimeout(()=>URL.revokeObjectURL(url),4000);
+  }catch(er){toast(er.message)}
+  b.disabled=false;
+};

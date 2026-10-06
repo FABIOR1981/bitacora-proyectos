@@ -87,3 +87,8 @@ html{scrollbar-color:var(--bd) var(--bg);scrollbar-width:thin}
 .pie{margin-top:48px;text-align:center;color:var(--mu);font:400 .75rem var(--fm);font-variant-numeric:tabular-nums}
 
 .links .bloq{color:var(--mu);border-style:solid;opacity:.85}
+
+dialog{max-height:88vh;overflow:auto}
+.doc{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd)}
+.doc span{display:grid;gap:2px;min-width:0;word-break:break-word;font-weight:600}
+.doc small{color:var(--mu);font-weight:400;font-size:.75rem;font-variant-numeric:tabular-nums}
