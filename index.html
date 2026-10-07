@@ -26,9 +26,8 @@
 </header>
 <div class="barra">
   <input id="buscar" type="search" placeholder="Buscar proyecto…" aria-label="Buscar proyecto">
-  <select id="orden" aria-label="Ordenar por"><option value="nombre">Ordenar: Nombre</option><option value="estado">Ordenar: Estado</option></select>
-  <button class="btn" id="dir" aria-label="Cambiar sentido">↑ Asc</button>
-  <div id="filtros" style="display:contents"></div>
+  <select id="orden" aria-label="Ordenar por"><option value="nombre:1">Nombre (asc)</option><option value="nombre:-1">Nombre (desc)</option><option value="estado:1">Estado (asc)</option><option value="estado:-1">Estado (desc)</option></select>
+  <div id="filtros"></div>
 </div>
 <section class="grid" id="lista" aria-live="polite"></section>
 <p class="pie" id="version"></p>

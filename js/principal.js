@@ -1,6 +1,6 @@
 /* ===== CONFIGURACIÓN ===== */
 const FASES={produccion:'En producción',desarrollo:'En desarrollo',prototipo:'Prototipo',pausa:'En pausa',idea:'Idea'};
-const VERSION='1.6.1'; // subí este número en cada cambio: actualiza la app instalada
+const VERSION='1.6.2'; // subí este número en cada cambio: actualiza la app instalada
 const API='/.netlify/functions/bitacora'; // el token de GitHub vive en Netlify, no aquí
 /* ========================== */
 let dens=(()=>{try{const d=localStorage.getItem('densidad');return d==='b'?'b':'a'}catch(e){return 'a'}})(),orden='nombre',dir=1,datos=[],verificador='',faseActiva='todas',admin=false,clave='',acceso='',editId=null,nombreFantasiaEditada=false;
@@ -47,7 +47,7 @@ async function guardar(){
 /* --- vista --- */
 function filtros(){
   const n=f=>f==='todas'?datos.length:datos.filter(p=>p.fase===f).length;
-  $('#filtros').innerHTML=['todas',...Object.keys(FASES)].filter(f=>f==='todas'||n(f)).map(f=>`<button class="chip" data-f="${f}" aria-pressed="${f===faseActiva}">${f==='todas'?'Todas':FASES[f]} <b>${n(f)}</b></button>`).join('');
+  $('#filtros').innerHTML=['todas',...Object.keys(FASES)].filter(f=>f==='todas'||n(f)).map(f=>`<button class="chip" data-f="${f}" aria-pressed="${f===faseActiva}">${f==='todas'?'Todas':FASES[f]}</button>`).join('');
 }
 const rango=f=>{const i=Object.keys(FASES).indexOf(f);return i<0?99:i};
 const nombreVisible=p=>p.nombre_fantasia||p.nombre;
@@ -79,8 +79,7 @@ function modo(){
 $('#filtros').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;faseActiva=b.dataset.f;filtros();pintar()};
 $('#buscar').oninput=pintar;
 $('#densidad').onchange=e=>{dens=e.target.value==='b'?'b':'a';try{localStorage.setItem('densidad',dens)}catch(x){}aplicarDens()};
-$('#orden').onchange=e=>{orden=e.target.value;pintar()};
-$('#dir').onclick=()=>{dir*=-1;$('#dir').textContent=dir>0?'↑ Asc':'↓ Desc';pintar()};
+$('#orden').onchange=e=>{[orden,dir]=e.target.value.split(':');dir=Number(dir);pintar()};
 $('#tema').onclick=()=>{const r=document.documentElement,o=matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.tema=(r.dataset.tema||(o?'oscuro':'claro'))==='oscuro'?'claro':'oscuro'};
 document.querySelectorAll('[data-cerrar]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 
@@ -158,7 +157,7 @@ $('#mBuscar').onclick=()=>{const on=document.body.classList.toggle('buscando');$
 $('#mOrden').onclick=()=>{
   const ciclo=[['nombre',1],['nombre',-1],['estado',1],['estado',-1]];
   const i=ciclo.findIndex(c=>c[0]===orden&&c[1]===dir),n=ciclo[(i+1)%4];
-  orden=n[0];dir=n[1];$('#orden').value=orden;$('#dir').textContent=dir>0?'↑ Asc':'↓ Desc';pintar();
+  orden=n[0];dir=n[1];$('#orden').value=orden+':'+dir;pintar();
   toast('Orden: '+orden+(dir>0?' ascendente':' descendente'));
 };
 $('#mTema').onclick=()=>$('#tema').click();
