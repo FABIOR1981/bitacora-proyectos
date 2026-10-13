@@ -43,7 +43,7 @@ jobs:
 
           archivos_encontrados = []
           for root, dirs, files in os.walk('.'):
-              dirs[:] = [d for d in dirs if not es_ignorable(os.path.join(root, d))]
+              dirs[:] = [d for d in dirs if not es_ignorable(os.path.relpath(os.path.join(root, d), '.'))]
               for file in files:
                   ruta_relativa = os.path.relpath(os.path.join(root, file), '.')
                   ruta_relativa = ruta_relativa.replace(os.sep, '/')
