@@ -1,6 +1,6 @@
 # Documentación
 
-La documentación de este proyecto está en el repositorio ...****documentacion-central****:
+La documentación de este proyecto está en el repositorio ...*******documentacion-central****:
 
 https://github.com/FABIOR1981/documentacion-central/tree/main/bitacora-proyectos/documentacion
 
