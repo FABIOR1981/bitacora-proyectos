@@ -7,7 +7,8 @@ const RAMA = 'main';
 const API = `https://api.github.com/repos/${REPO}/contents/${RUTA}`;
 const DOCS_REPO = process.env.DOCS_REPO || 'FABIOR1981/documentacion-central';
 const MIME = { pdf: 'application/pdf', md: 'text/markdown; charset=utf-8', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', txt: 'text/plain; charset=utf-8' };
-const esPdf = n => /\.pdf$/i.test(String(n || '')); // solo se muestran y sirven PDF
+const esPdf = n => /\.pdf$/i.test(String(n || '')); // en "documentacion" solo se muestran y sirven PDF
+const esMd = n => /\.md$/i.test(String(n || ''));   // en "respaldo_MD" solo se muestran y sirven .md
 const MAX_BYTES = 4 * 1024 * 1024; // tope de descarga por la función
 const VIGENCIA_ENLACE = 15 * 60; // segundos que dura el enlace de un documento
 const VER_EN_NAVEGADOR = ['pdf', 'md', 'txt']; // se abren en el navegador; el resto se descarga
@@ -18,21 +19,37 @@ const resp = (c, o) => ({ statusCode: c, headers: { 'Content-Type': 'application
 const igual = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const claveOk = c => process.env.CLAVE_ADMIN && igual(c || '', process.env.CLAVE_ADMIN);
 const repoOk = r => /^FABIOR1981\/[\w.-]+$/.test(r || '');
-const carpetaDocs = repo => repo.split('/')[1].replace(/\.git$/, '') + '/documentacion';
+const nombreRepo = repo => repo.split('/')[1].replace(/\.git$/, '');
+const carpetaDocs = repo => nombreRepo(repo) + '/documentacion';
+const carpetaRespaldo = repo => nombreRepo(repo) + '/respaldo_MD';
+// Ruta válida: <proyecto>/documentacion/<archivo>.pdf  o  <proyecto>/respaldo_MD/<archivo>.md
+const permitido = ruta => /^[\w.-]+\/(documentacion|respaldo_MD)\/[^/]+$/.test(ruta) && !ruta.includes('..') && (ruta.split('/')[1] === 'documentacion' ? esPdf(ruta) : esMd(ruta));
 const firma = (ruta, exp) => crypto.createHmac('sha256', process.env.CLAVE_ADMIN).update(ruta + '|' + exp).digest('hex');
 const enlace = ruta => { const exp = Math.floor(Date.now() / 1000) + VIGENCIA_ENLACE; return `/.netlify/functions/bitacora?doc=${encodeURIComponent(ruta)}&exp=${exp}&f=${firma(ruta, exp)}`; };
-const enlaceOk = q => /^[\w.-]+\/documentacion\/[^/]+$/.test(q.doc || '') && !q.doc.includes('..') && esPdf(q.doc) && Number(q.exp) > Date.now() / 1000 && igual(q.f || '', firma(q.doc, q.exp));
-const rutaOk = (repo, p) => String(p || '').startsWith(carpetaDocs(repo) + '/') && String(p).length > carpetaDocs(repo).length + 1 && !String(p).includes('..') && esPdf(p);
+const enlaceOk = q => permitido(q.doc || '') && Number(q.exp) > Date.now() / 1000 && igual(q.f || '', firma(q.doc, q.exp));
+const rutaOk = (repo, p) => permitido(String(p || '')) && String(p).startsWith(nombreRepo(repo) + '/');
 
-// Lista los archivos de "<repo>/documentacion" en el repositorio documentacion-central
-async function listar(repo) {
-  const r = await fetch(`https://api.github.com/repos/${DOCS_REPO}/contents/${carpetaDocs(repo).split('/').map(encodeURIComponent).join('/')}`, { headers: cabDocs() });
-  if (r.status === 404) return resp(200, { archivos: [] });
-  if (!r.ok) return resp(502, { error: 'GitHub respondió ' + r.status + ' (¿el token tiene acceso a documentacion-central?)' });
+// Lista los archivos de una carpeta del repositorio documentacion-central (si no existe, devuelve vacío)
+async function listarCarpeta(carpeta, permitidoFn, rotulo) {
+  const r = await fetch(`https://api.github.com/repos/${DOCS_REPO}/contents/${carpeta.split('/').map(encodeURIComponent).join('/')}`, { headers: cabDocs() });
+  if (r.status === 404) return [];
+  if (!r.ok) throw new Error('GitHub respondió ' + r.status + ' (¿el token tiene acceso a documentacion-central?)');
   const lista = await r.json();
-  const archivos = (Array.isArray(lista) ? lista : []).filter(f => f.type === 'file' && esPdf(f.name))
-    .map(f => ({ nombre: f.name, ruta: f.path, tam: f.size, url: enlace(f.path) })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-  return resp(200, { archivos });
+  return (Array.isArray(lista) ? lista : []).filter(f => f.type === 'file' && permitidoFn(f.name))
+    .map(f => ({ nombre: rotulo + f.name, ruta: f.path, tam: f.size, url: enlace(f.path) })).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+// Junta los PDF de "<repo>/documentacion" y los .md de "<repo>/respaldo_MD"
+async function listar(repo) {
+  try {
+    const [pdf, md] = await Promise.all([
+      listarCarpeta(carpetaDocs(repo), esPdf, ''),
+      listarCarpeta(carpetaRespaldo(repo), esMd, 'respaldo_MD / ')
+    ]);
+    return resp(200, { archivos: [...pdf, ...md] });
+  } catch (e) {
+    return resp(502, { error: e.message });
+  }
 }
 
 // Devuelve un archivo de documentacion-central para descargarlo
