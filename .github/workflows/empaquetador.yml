@@ -26,7 +26,7 @@ jobs:
 
           NOMBRE = os.environ['NOMBRE_PROYECTO']
           # El archivo se genera FUERA del proyecto (carpeta temporal del runner)
-          SALIDA = os.path.join(os.environ['RUNNER_TEMP'], f'proyecto-para-ia-{NOMBRE}.md')
+          SALIDA = os.path.join(os.environ['RUNNER_TEMP'], f'{NOMBRE}-respaldo.md')
 
           IGNORAR_PATRONES = ['node_modules', '.git', '.github']
           EXTENSIONES_TEXTO = ['.html', '.css', '.js', '.md', '.json', '.webmanifest', '.txt', '.py']
@@ -37,7 +37,7 @@ jobs:
                   if parte in IGNORAR_PATRONES or parte.startswith('.'):
                       return True
               # Ignorar bundles viejos que pudieran quedar en el repo
-              if os.path.basename(ruta).startswith('proyecto-para-ia'):
+              if os.path.basename(ruta).endswith('-respaldo.md'):
                   return True
               return False
 
@@ -82,7 +82,7 @@ jobs:
         env:
           BD_TOKEN: ${{ secrets.BD_TOKEN }}
         run: |
-          ARCHIVO="proyecto-para-ia-${NOMBRE_PROYECTO}.md"
+          ARCHIVO="${NOMBRE_PROYECTO}-respaldo.md"
 
           git clone "https://x-access-token:${BD_TOKEN}@github.com/${REPO_DESTINO}.git" "$RUNNER_TEMP/destino"
           cd "$RUNNER_TEMP/destino"
