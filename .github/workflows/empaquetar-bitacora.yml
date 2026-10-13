@@ -11,7 +11,7 @@ jobs:
   generar-bundle:
     runs-on: ubuntu-latest
     steps:
-      - name: 1. Descargar repositorio
+      - name: 1. Descargar repositorio actual
         uses: actions/checkout@v4
 
       - name: 2. Configurar Python
@@ -19,14 +19,25 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 3. Generar archivo Markdown para IA incluyendo subcarpetas
+      - name: 3. Leer ruta de destino y generar archivo Markdown para IA
         run: |
           python3 - <<'EOF'
           import os
 
-          # Solo ignoramos carpetas del sistema y el archivo de salida final
-          IGNORAR_CARPETAS = {'node_modules', '.git', '.github'}
-          IGNORAR_ARCHIVOS = {'proyecto-para-ia.md'}
+          # 1. Leer la ruta destino desde el archivo de configuración genérico
+          config_file = 'path-destino-empaquetado.txt'
+          if os.path.exists(config_file):
+              with open(config_file, 'r', encoding='utf-8') as cf:
+                  ruta_destino = cf.read().strip()
+          else:
+              # Fallback por si no existe el archivo
+              ruta_destino = 'proyecto-para-ia.md'
+
+          print(f"Ruta de destino leída: {ruta_destino}")
+
+          # Solo ignoramos carpetas del sistema y archivos de control
+          IGNORAR_CARPETAS = {'node_modules', '.git', '.github', 'temp_bd'}
+          IGNORAR_ARCHIVOS = {'proyecto-para-ia.md', 'path-destino-empaquetado.txt'}
 
           archivos_encontrados = []
           for root, dirs, files in os.walk('.'):
@@ -72,16 +83,57 @@ jobs:
 
               output += f"### Archivo: `{ruta}`\n```{lang}\n{contenido}\n```\n\n"
 
-          with open('proyecto-para-ia.md', 'w', encoding='utf-8') as f:
+          # Guardar localmente usando la ruta leída del txt
+          # Asegurar que el directorio de destino exista si la ruta tiene carpetas
+          dir_salida = os.path.dirname(ruta_destino)
+          if dir_salida and not os.path.exists(dir_salida):
+              os.makedirs(dir_salida, exist_ok=True)
+
+          with open(ruta_destino, 'w', encoding='utf-8') as f:
               f.write(output)
 
-          print("¡Bundle generado correctamente con todas las subcarpetas y estilos!")
+          print(f"¡Bundle generado correctamente en: {ruta_destino}!")
           EOF
 
-      - name: 4. Guardar cambios en el repositorio si hubo modificaciones
+      - name: 4. Sincronizar con el repositorio central 'bd'
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add proyecto-para-ia.md
-          git diff --staged --quiet || git commit -m "chore: actualizar proyecto-para-ia.md con todos los estilos automático [skip ci]"
+          
+          # Clonar el repositorio 'bd' usando el token personal
+          git clone https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/FABIOR1981/bd.git temp_bd
+          
+          # Copiar el archivo generado asegurando que la estructura de carpetas exista en temp_bd
+          # Python ya guardó el archivo respetando la ruta relativa (ej. bd/bitacora/...)
+          # Si la ruta guardada ya incluye 'bd/...', lo movemos de forma inteligente:
+          python3 - <<'EOF'
+          import shutil
+          import os
+
+          config_file = 'path-destino-empaquetado.txt'
+          if os.path.exists(config_file):
+              with open(config_file, 'r', encoding='utf-8') as cf:
+                  ruta_destino = cf.read().strip()
+          else:
+              ruta_destino = 'proyecto-para-ia.md'
+
+          # Si la ruta comienza con 'bd/', quitamos ese prefijo para copiarlo dentro del clon de 'bd'
+          if ruta_destino.startswith('bd/'):
+              ruta_interna = ruta_destino[3:]
+          else:
+              ruta_interna = os.path.basename(ruta_destino)
+
+          destino_final = os.path.join('temp_bd', ruta_interna)
+          os.makedirs(os.path.dirname(destino_final), exist_ok=True)
+          
+          shutil.copy(ruta_destino, destino_final)
+          print(f"Archivo copiado a {destino_final} para commit.")
+          EOF
+
+          # Hacer commit y push en el repositorio 'bd'
+          cd temp_bd
+          git add .
+          git diff --staged --quiet || git commit -m "chore: actualizar bundle automático desde repositorio origen [skip ci]"
           git push
