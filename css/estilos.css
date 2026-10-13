@@ -17,33 +17,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-tema=claro]) {
-    --bg: #121110;
-    --sf: #1c1b18;
-    --tx: #f1eee6;
-    --mu: #a29e92;
-    --bd: #2f2d28;
-    --ac: #f1eee6;
-    --produccion: #4ade80;
-    --desarrollo: #fbbf24;
-    --prototipo: #a78bfa;
-    --pausa: #a8a29e;
-    --idea: #38bdf8;
+    --bg: #121110; --sf: #1c1b18; --tx: #f1eee6; --mu: #a29e92;
+    --bd: #2f2d28; --ac: #f1eee6; --produccion: #4ade80;
+    --desarrollo: #fbbf24; --prototipo: #a78bfa; --pausa: #a8a29e; --idea: #38bdf8;
     color-scheme: dark;
   }
 }
 
 :root[data-tema=oscuro] {
-  --bg: #121110;
-  --sf: #1c1b18;
-  --tx: #f1eee6;
-  --mu: #a29e92;
-  --bd: #2f2d28;
-  --ac: #f1eee6;
-  --produccion: #4ade80;
-  --desarrollo: #fbbf24;
-  --prototipo: #a78bfa;
-  --pausa: #a8a29e;
-  --idea: #38bdf8;
+  --bg: #121110; --sf: #1c1b18; --tx: #f1eee6; --mu: #a29e92;
+  --bd: #2f2d28; --ac: #f1eee6; --produccion: #4ade80;
+  --desarrollo: #fbbf24; --prototipo: #a78bfa; --pausa: #a8a29e; --idea: #38bdf8;
   color-scheme: dark;
 }
 
@@ -53,7 +37,7 @@
 
 * {
   box-sizing: border-box;
-  margin: 0;
+  margin: 0px;
 }
 
 [hidden] {
@@ -61,14 +45,14 @@
 }
 
 html {
-  padding-top: env(safe-area-inset-top, 0);
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   scrollbar-color: var(--bd) var(--bg);
   scrollbar-width: thin;
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--tx);
   font-family: var(--fh);
   min-height: 100vh;
@@ -76,8 +60,9 @@ body {
 
 main {
   max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 24px 80px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 48px 24px 80px 24px;
 }
 
 header {
@@ -91,26 +76,26 @@ header {
 h1 {
   font-size: clamp(2.2rem, 5vw, 3.5rem);
   font-weight: 800;
-  letter-spacing: -.04em;
-  line-height: .95;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
   text-wrap: balance;
 }
 
 .sub {
   color: var(--mu);
   font-family: var(--fm);
-  font-size: .85rem;
+  font-size: 0.85rem;
   margin-top: 14px;
   font-variant-numeric: tabular-nums;
 }
 
 .btn, .chip {
-  background: var(--sf);
+  background-color: var(--sf);
   border: 1px solid var(--bd);
   color: var(--tx);
   border-radius: 99px;
   padding: 8px 14px;
-  font: 600 .8rem var(--fh);
+  font: 600 0.8rem var(--fh);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -124,13 +109,13 @@ h1 {
 }
 
 .btn.on {
-  background: var(--ac);
+  background-color: var(--ac);
   color: var(--bg);
   border-color: var(--ac);
 }
 
 .btn.prim {
-  background: var(--ac);
+  background-color: var(--ac);
   color: var(--bg);
 }
 
@@ -138,17 +123,17 @@ h1 {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 40px 0 28px;
+  margin: 40px 0px 28px 0px;
   align-items: center;
 }
 
 input, select, textarea {
-  background: var(--sf);
+  background-color: var(--sf);
   border: 1px solid var(--bd);
   color: var(--tx);
   border-radius: 12px;
   padding: 11px 14px;
-  font: 400 .95rem var(--fh);
+  font: 400 0.95rem var(--fh);
   width: 100%;
   caret-color: var(--ac);
 }
@@ -169,12 +154,12 @@ input[type=checkbox] {
 }
 
 .chip {
-  background: transparent;
+  background-color: transparent;
   color: var(--mu);
 }
 
 .chip[aria-pressed=true] {
-  background: var(--ac);
+  background-color: var(--ac);
   color: var(--bg);
   border-color: var(--ac);
 }
@@ -199,22 +184,22 @@ input[type=checkbox] {
 }
 
 .card {
-  background: var(--sf);
+  background-color: var(--sf);
   border: 1px solid var(--bd);
   border-radius: 16px;
   padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: transform .2s, border-color .2s;
-  animation: ent .4s both;
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--tx) 5%, transparent), 0 14px 28px -22px color-mix(in srgb, var(--tx) 45%, transparent);
+  transition: transform 0.2s, border-color 0.2s;
+  animation: ent 0.4s both;
+  box-shadow: 0px 1px 0px color-mix(in srgb, var(--tx) 5%, transparent), 0px 14px 28px -22px color-mix(in srgb, var(--tx) 45%, transparent);
 }
 
 .card:hover {
   transform: translateY(-3px);
   border-color: var(--c);
-  box-shadow: 0 18px 34px -20px color-mix(in srgb, var(--c) 55%, transparent);
+  box-shadow: 0px 18px 34px -20px color-mix(in srgb, var(--c) 55%, transparent);
 }
 
 @keyframes ent {
@@ -225,30 +210,30 @@ input[type=checkbox] {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font: 500 .72rem var(--fm);
+  font: 500 0.72rem var(--fm);
   color: var(--c);
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
 }
 
 .fase i {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--c);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 20%, transparent);
+  background-color: var(--c);
+  box-shadow: 0px 0px 0px 4px color-mix(in srgb, var(--c) 20%, transparent);
 }
 
 h2 {
   font-size: 1.3rem;
   font-weight: 700;
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
   word-break: break-word;
 }
 
 .desc {
   color: var(--mu);
-  font-size: .92rem;
+  font-size: 0.92rem;
   line-height: 1.45;
   flex: 1;
   display: -webkit-box;
@@ -265,13 +250,13 @@ h2 {
 }
 
 .links a, .links span, .links button {
-  font: 600 .75rem var(--fh);
+  font: 600 0.75rem var(--fh);
   padding: 7px 12px;
   border-radius: 8px;
   border: 1px solid var(--bd);
   color: var(--tx);
   text-decoration: none;
-  background: none;
+  background-color: transparent;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -284,13 +269,13 @@ h2 {
 }
 
 .links.admin a, .links.admin span, .links.admin button {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 1 1 0px;
+  min-width: 0px;
   justify-content: center;
   white-space: nowrap;
   padding: 7px 4px;
   gap: 4px;
-  font-size: .7rem;
+  font-size: 0.7rem;
 }
 
 .links.admin .i {
@@ -299,7 +284,7 @@ h2 {
 }
 
 .links a:hover, .links button:hover {
-  background: var(--ac);
+  background-color: var(--ac);
   color: var(--bg);
 }
 
@@ -316,9 +301,9 @@ h2 {
 }
 
 .btn.del:hover {
-  background: #dc2626;
+  background-color: #dc2626;
   border-color: #dc2626;
-  color: #fff;
+  color: #ffffff;
 }
 
 .doc .btn {
@@ -329,11 +314,11 @@ h2 {
 .vacio {
   color: var(--mu);
   font-family: var(--fm);
-  padding: 40px 0;
+  padding: 40px 0px;
 }
 
 dialog {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--tx);
   border: 1px solid var(--bd);
   border-radius: 20px;
@@ -345,11 +330,11 @@ dialog {
 }
 
 dialog::backdrop {
-  background: #0009;
+  background: rgba(0, 0, 0, 0.6);
 }
 
 #dEntrada::backdrop {
-  background: #000b;
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -366,7 +351,7 @@ dialog form {
 }
 
 dialog label {
-  font: 500 .75rem var(--fm);
+  font: 500 0.75rem var(--fm);
   color: var(--mu);
   display: grid;
   gap: 6px;
@@ -374,7 +359,7 @@ dialog label {
 
 dialog h2 {
   font-size: 1.4rem;
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
 }
 
 .fila {
@@ -385,24 +370,24 @@ dialog h2 {
 }
 
 .aviso {
-  font: 400 .78rem var(--fm);
+  font: 400 0.78rem var(--fm);
   color: #dc2626;
   min-height: 1em;
 }
 
 #toast {
   position: fixed;
-  bottom: calc(20px + env(safe-area-inset-bottom, 0));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
-  background: var(--ac);
+  background-color: var(--ac);
   color: var(--bg);
   padding: 10px 18px;
   border-radius: 99px;
-  font: 500 .8rem var(--fm);
+  font: 500 0.8rem var(--fm);
   opacity: 0;
   pointer-events: none;
-  transition: opacity .3s;
+  transition: opacity 0.3s;
 }
 
 #toast.v {
@@ -417,7 +402,7 @@ dialog h2 {
   width: auto;
   border-radius: 99px;
   padding: 8px 14px;
-  font: 600 .8rem var(--fh);
+  font: 600 0.8rem var(--fh);
   cursor: pointer;
 }
 
@@ -433,7 +418,7 @@ dialog h2 {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--ac) 85%, transparent);
+  background-color: color-mix(in srgb, var(--ac) 85%, transparent);
   color: var(--bg);
 }
 
@@ -447,13 +432,13 @@ dialog h2 {
 
 @media (max-width: 720px) {
   main {
-    padding: 28px 16px calc(104px + env(safe-area-inset-bottom, 0));
+    padding: 28px 16px calc(104px + env(safe-area-inset-bottom, 0px));
   }
   h1 { font-size: 2.4rem; }
   .acc { display: none; }
   .barra {
-    margin: 22px -16px 18px;
-    padding: 0 16px;
+    margin: 22px -16px 18px -16px;
+    padding: 0px 16px;
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
@@ -466,32 +451,32 @@ dialog h2 {
     position: fixed;
     left: 12px;
     right: 12px;
-    bottom: calc(84px + env(safe-area-inset-bottom, 0));
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     z-index: 21;
     font-size: 16px;
     min-height: 48px;
-    box-shadow: 0 12px 30px -10px #0006;
+    box-shadow: 0px 12px 30px -10px rgba(0, 0, 0, 0.4);
   }
   .grid { grid-template-columns: 1fr; }
   .links a, .links button, .links span { min-height: 40px; }
   input, select, textarea { font-size: 16px; }
   dialog {
-    margin: auto 0 0;
+    margin: auto 0px 0px 0px;
     width: 100%;
     max-width: none;
-    border-radius: 22px 22px 0 0;
-    padding: 26px 26px max(26px, env(safe-area-inset-bottom, 0px));
+    border-radius: 22px 22px 0px 0px;
+    padding: 26px 26px max(26px, env(safe-area-inset-bottom, 0px)) 26px;
   }
-  #toast { bottom: calc(92px + env(safe-area-inset-bottom, 0)); }
+  #toast { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   #menuMovil {
     display: flex;
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
     z-index: 20;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0));
-    background: color-mix(in srgb, var(--sf) 90%, transparent);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)) 6px;
+    background-color: color-mix(in srgb, var(--sf) 90%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-top: 1px solid var(--bd);
@@ -505,16 +490,16 @@ dialog h2 {
     gap: 4px;
     min-height: 52px;
     background: none;
-    border: 0;
+    border: 0px;
     border-radius: 14px;
     color: var(--mu);
-    font: 600 .7rem var(--fh);
+    font: 600 0.7rem var(--fh);
     cursor: pointer;
   }
   #menuMovil button .i { width: 22px; height: 22px; }
   #menuMovil button.on, #menuMovil button[aria-pressed=true] {
     color: var(--tx);
-    background: color-mix(in srgb, var(--ac) 10%, transparent);
+    background-color: color-mix(in srgb, var(--ac) 10%, transparent);
   }
 }
 
@@ -522,14 +507,14 @@ dialog h2 {
   margin-top: 48px;
   text-align: center;
   color: var(--mu);
-  font: 400 .75rem var(--fm);
+  font: 400 0.75rem var(--fm);
   font-variant-numeric: tabular-nums;
 }
 
 .links .bloq {
   color: var(--mu);
   border-style: solid;
-  opacity: .85;
+  opacity: 0.85;
 }
 
 .doc {
@@ -537,14 +522,14 @@ dialog h2 {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
+  padding: 12px 0px;
   border-bottom: 1px solid var(--bd);
 }
 
 .doc span {
   display: grid;
   gap: 2px;
-  min-width: 0;
+  min-width: 0px;
   word-break: break-word;
   font-weight: 600;
 }
@@ -552,7 +537,7 @@ dialog h2 {
 .doc small {
   color: var(--mu);
   font-weight: 400;
-  font-size: .75rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -562,24 +547,24 @@ dialog h2 {
   .grid[data-dens=a] { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .grid[data-dens=a] .links.admin { flex-wrap: wrap; }
   .grid[data-dens=a] .links.admin a, .grid[data-dens=a] .links.admin span, .grid[data-dens=a] .links.admin button {
-    flex: 1 1 40%;
+    flex: 1 1 40px;
     justify-content: center;
     white-space: nowrap;
     padding: 7px 8px;
-    font-size: .75rem;
+    font-size: 0.75rem;
   }
   .grid[data-dens=b] { grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
   .grid[data-dens=b] .card {
     position: relative;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0px, 1fr);
     grid-template-areas: "f n" "l l";
     align-items: start;
     gap: 8px;
     padding: 12px;
   }
   .grid[data-dens=b] .fase { grid-area: f; padding-top: 5px; }
-  .grid[data-dens=b] h2 { grid-area: n; font-size: .95rem; line-height: 1.2; }
+  .grid[data-dens=b] h2 { grid-area: n; font-size: 0.95rem; line-height: 1.2; }
   .grid[data-dens=b] .desc { display: none; }
   .grid[data-dens=b] .links { grid-area: l; flex-wrap: wrap; gap: 6px; }
   .grid[data-dens=b] .links a, .grid[data-dens=b] .links button, .grid[data-dens=b] .links span {
@@ -590,5 +575,5 @@ dialog h2 {
     justify-content: center;
   }
   .grid[data-dens=b] .links span:not(.bloq) { display: none; }
-  .grid[data-dens=b] .t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .grid[data-dens=b] .t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; }
 }
