@@ -2,7 +2,10 @@ name: Actualizar Bundle para IA Automatico
 
 on:
   push:
-    branches: [ main ] # Cambia 'main' si usas otra rama principal como 'master'
+    branches: [ main ] # Cambia 'main' si usas 'master'
+
+permissions:
+  contents: write
 
 jobs:
   generar-bundle:
@@ -16,43 +19,45 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 3. Generar archivo Markdown para IA
+      - name: 3. Generar archivo Markdown para IA incluyendo subcarpetas
         run: |
           python3 - <<'EOF'
           import os
 
-          IGNORAR_PATRONES = ['node_modules', '.git', '.github', 'proyecto-para-ia.md']
-          EXTENSIONES_TEXTO = ['.html', '.css', '.js', '.md', '.json', '.webmanifest', '.txt', '.py']
-
-          def es_ignorable(ruta):
-              partes = ruta.split(os.sep)
-              for parte in partes:
-                  if parte in IGNORAR_PATRONES or parte.startswith('.'):
-                      return True
-              return False
+          # Solo ignoramos carpetas del sistema y el archivo de salida final
+          IGNORAR_CARPETAS = {'node_modules', '.git', '.github'}
+          IGNORAR_ARCHIVOS = {'proyecto-para-ia.md'}
 
           archivos_encontrados = []
           for root, dirs, files in os.walk('.'):
-              # Modificamos dirs in-place para omitir carpetas no deseadas
-              dirs[:] = [d for d in dirs if not es_ignorable(os.path.join(root, d))]
+              # Filtrar carpetas ignoradas para que no entre en ellas
+              dirs[:] = [d for d in dirs if d not in IGNORAR_CARPETAS and not d.startswith('.')]
+              
               for file in files:
-                  ruta_relativa = os.path.relpath(os.path.join(root, file), '.')
+                  if file in IGNORAR_ARCHIVOS:
+                      continue
+                  
+                  ruta_completa = os.path.join(root, file)
+                  ruta_relativa = os.path.relpath(ruta_completa, '.')
                   ruta_relativa = ruta_relativa.replace(os.sep, '/')
-                  if not es_ignorable(ruta_relativa):
-                      archivos_encontrados.append(ruta_relativa)
+                  
+                  # Evitar archivos ocultos en la raíz o subniveles
+                  if any(p.startswith('.') for p in ruta_relativa.split('/')):
+                      continue
+                      
+                  archivos_encontrados.append(ruta_relativa)
 
           archivos_encontrados.sort()
 
-          # Construir el contenido Markdown
-          output = "# Bundle del Proyecto para IA\n\n"
-          output += "## Estructura de Archivos\n"
+          # Construir la estructura en Markdown
+          output = "# Bundle del Proyecto para IA\n\n## Estructura de Archivos\n"
           for ruta in archivos_encontrados:
               output += f"- {ruta}\n"
           output += "\n---\n\n## Código Fuente\n\n"
 
+          # Agregar el código fuente de cada archivo
           for ruta in archivos_encontrados:
               ext = os.path.splitext(ruta)[1].lower()
-              # Mapear lenguajes para el bloque markdown
               lang = ext.lstrip('.')
               if lang == 'js': lang = 'javascript'
               elif lang == 'html': lang = 'html'
@@ -65,13 +70,12 @@ jobs:
               except Exception:
                   contenido = "[Archivo Binario o No Leíble]"
 
-              output += f"### Archivo: `{ruta}`\n"
-              output += f"```{lang}\n{contenido}\n```\n\n"
+              output += f"### Archivo: `{ruta}`\n```{lang}\n{contenido}\n```\n\n"
 
           with open('proyecto-para-ia.md', 'w', encoding='utf-8') as f:
               f.write(output)
 
-          print("¡Bundle generado con éxito!")
+          print("¡Bundle generado correctamente con todas las subcarpetas y estilos!")
           EOF
 
       - name: 4. Guardar cambios en el repositorio si hubo modificaciones
@@ -79,5 +83,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add proyecto-para-ia.md
-          git diff --staged --quiet || git commit -m "chore: actualizar proyecto-para-ia.md automático [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: actualizar proyecto-para-ia.md con todos los estilos automático [skip ci]"
           git push
