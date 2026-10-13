@@ -71,9 +71,11 @@ async function leer(ruta, disposicion) {
   const buf = Buffer.from(await r.arrayBuffer());
   if (buf.length > MAX_BYTES) return resp(413, { error: 'El archivo supera 4 MB: descargalo desde GitHub' });
   const nombre = ruta.split('/').pop(), ext = nombre.split('.').pop().toLowerCase();
-  const tipo = disposicion === 'inline' && ext === 'md' ? 'text/plain; charset=utf-8' : MIME[ext] || 'application/octet-stream';
+  // Descarga: tipo genérico para que ningún navegador intente mostrarlo; PDF en línea: su tipo propio
+  const tipo = disposicion === 'attachment' ? 'application/octet-stream' : MIME[ext] || 'application/octet-stream';
+  const simple = nombre.replace(/[^\w.-]/g, '_');
   return { statusCode: 200, isBase64Encoded: true, body: buf.toString('base64'),
-    headers: { 'Content-Type': tipo, 'Content-Disposition': `${disposicion}; filename*=UTF-8''${encodeURIComponent(nombre)}`, 'Cache-Control': 'no-store' } };
+    headers: { 'Content-Type': tipo, 'Content-Disposition': `${disposicion}; filename="${simple}"; filename*=UTF-8''${encodeURIComponent(nombre)}`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' } };
 }
 
 exports.handler = async (ev) => {
