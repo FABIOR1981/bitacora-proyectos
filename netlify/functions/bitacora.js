@@ -11,7 +11,7 @@ const esPdf = n => /\.pdf$/i.test(String(n || '')); // en "documentacion" solo s
 const esMd = n => /\.md$/i.test(String(n || ''));   // en "respaldo_MD" solo se muestran y sirven .md
 const MAX_BYTES = 4 * 1024 * 1024; // tope de descarga por la función
 const VIGENCIA_ENLACE = 15 * 60; // segundos que dura el enlace de un documento
-const VER_EN_NAVEGADOR = ['pdf', 'md', 'txt']; // se abren en el navegador; el resto se descarga
+const VER_EN_NAVEGADOR = ['pdf']; // solo el PDF se abre en el navegador; el resto (incluido .md) se descarga
 
 const cab = (x = {}) => ({ Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + process.env.GITHUB_TOKEN, 'User-Agent': 'bitacora', ...x });
 const cabDocs = (x = {}) => cab({ Authorization: 'Bearer ' + (process.env.GITHUB_TOKEN_DOCUMENTACION_CENTRAL || process.env.GITHUB_TOKEN), ...x });
@@ -44,7 +44,7 @@ async function listar(repo) {
   try {
     const [pdf, md] = await Promise.all([
       listarCarpeta(carpetaDocs(repo), esPdf, ''),
-      listarCarpeta(carpetaRespaldo(repo), esMd, 'respaldo_MD / ')
+      listarCarpeta(carpetaRespaldo(repo), esMd, '')
     ]);
     return resp(200, { archivos: [...pdf, ...md] });
   } catch (e) {
@@ -108,3 +108,4 @@ exports.handler = async (ev) => {
     return resp(500, { error: 'Error del servidor' });
   }
 };
+
