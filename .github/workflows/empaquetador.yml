@@ -7,6 +7,9 @@ on:
 jobs:
   generar-bundle:
     runs-on: ubuntu-latest
+    env:
+      REPO_DESTINO: FABIOR1981/bd
+      NOMBRE_PROYECTO: ${{ github.event.repository.name }}
     steps:
       - name: 1. Descargar repositorio
         uses: actions/checkout@v4
@@ -21,7 +24,11 @@ jobs:
           python3 - <<'EOF'
           import os
 
-          IGNORAR_PATRONES = ['node_modules', '.git', '.github', 'proyecto-para-ia.md']
+          NOMBRE = os.environ['NOMBRE_PROYECTO']
+          # El archivo se genera FUERA del proyecto (carpeta temporal del runner)
+          SALIDA = os.path.join(os.environ['RUNNER_TEMP'], f'proyecto-para-ia-{NOMBRE}.md')
+
+          IGNORAR_PATRONES = ['node_modules', '.git', '.github']
           EXTENSIONES_TEXTO = ['.html', '.css', '.js', '.md', '.json', '.webmanifest', '.txt', '.py']
 
           def es_ignorable(ruta):
@@ -29,11 +36,13 @@ jobs:
               for parte in partes:
                   if parte in IGNORAR_PATRONES or parte.startswith('.'):
                       return True
+              # Ignorar bundles viejos que pudieran quedar en el repo
+              if os.path.basename(ruta).startswith('proyecto-para-ia'):
+                  return True
               return False
 
           archivos_encontrados = []
           for root, dirs, files in os.walk('.'):
-              # Modificamos dirs in-place para omitir carpetas no deseadas
               dirs[:] = [d for d in dirs if not es_ignorable(os.path.join(root, d))]
               for file in files:
                   ruta_relativa = os.path.relpath(os.path.join(root, file), '.')
@@ -43,8 +52,7 @@ jobs:
 
           archivos_encontrados.sort()
 
-          # Construir el contenido Markdown
-          output = "# Bundle del Proyecto para IA\n\n"
+          output = f"# Bundle del Proyecto para IA: {NOMBRE}\n\n"
           output += "## Estructura de Archivos\n"
           for ruta in archivos_encontrados:
               output += f"- {ruta}\n"
@@ -52,12 +60,8 @@ jobs:
 
           for ruta in archivos_encontrados:
               ext = os.path.splitext(ruta)[1].lower()
-              # Mapear lenguajes para el bloque markdown
               lang = ext.lstrip('.')
               if lang == 'js': lang = 'javascript'
-              elif lang == 'html': lang = 'html'
-              elif lang == 'css': lang = 'css'
-              elif lang == 'json': lang = 'json'
 
               try:
                   with open(ruta, 'r', encoding='utf-8') as f:
@@ -68,16 +72,37 @@ jobs:
               output += f"### Archivo: `{ruta}`\n"
               output += f"```{lang}\n{contenido}\n```\n\n"
 
-          with open('proyecto-para-ia.md', 'w', encoding='utf-8') as f:
+          with open(SALIDA, 'w', encoding='utf-8') as f:
               f.write(output)
 
-          print("¡Bundle generado con éxito!")
+          print(f"¡Bundle generado con éxito: {SALIDA}")
           EOF
 
-      - name: 4. Guardar cambios en el repositorio si hubo modificaciones
+      - name: 4. Guardar el bundle en el repositorio FABIOR1981/bd
+        env:
+          BD_TOKEN: ${{ secrets.BD_TOKEN }}
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add proyecto-para-ia.md
-          git diff --staged --quiet || git commit -m "chore: actualizar proyecto-para-ia.md automático [skip ci]"
-          git push
+          ARCHIVO="proyecto-para-ia-${NOMBRE_PROYECTO}.md"
+
+          git clone "https://x-access-token:${BD_TOKEN}@github.com/${REPO_DESTINO}.git" "$RUNNER_TEMP/bd"
+          cd "$RUNNER_TEMP/bd"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          mkdir -p "${NOMBRE_PROYECTO}"
+          cp "$RUNNER_TEMP/${ARCHIVO}" "${NOMBRE_PROYECTO}/${ARCHIVO}"
+
+          git add "${NOMBRE_PROYECTO}/${ARCHIVO}"
+          if git diff --staged --quiet; then
+            echo "Sin cambios en el bundle."
+            exit 0
+          fi
+
+          git commit -m "chore: actualizar bundle de ${NOMBRE_PROYECTO}"
+
+          # Reintenta por si otro proyecto empujó al mismo repo al mismo tiempo
+          for intento in 1 2 3; do
+            git push && exit 0
+            git pull --rebase
+          done
+          exit 1
