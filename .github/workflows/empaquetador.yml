@@ -8,7 +8,7 @@ jobs:
   generar-bundle:
     runs-on: ubuntu-latest
     env:
-      REPO_DESTINO: FABIOR1981/bd
+      REPO_DESTINO: FABIOR1981/documentacion-central
       NOMBRE_PROYECTO: ${{ github.event.repository.name }}
     steps:
       - name: 1. Descargar repositorio
@@ -78,18 +78,18 @@ jobs:
           print(f"¡Bundle generado con éxito: {SALIDA}")
           EOF
 
-      - name: 4. Guardar el bundle en el repositorio FABIOR1981/bd
+      - name: 4. Guardar el bundle en el repositorio FABIOR1981/documentacion-central
         env:
           BD_TOKEN: ${{ secrets.BD_TOKEN }}
         run: |
           ARCHIVO="proyecto-para-ia-${NOMBRE_PROYECTO}.md"
 
-          git clone "https://x-access-token:${BD_TOKEN}@github.com/${REPO_DESTINO}.git" "$RUNNER_TEMP/bd"
-          cd "$RUNNER_TEMP/bd"
+          git clone "https://x-access-token:${BD_TOKEN}@github.com/${REPO_DESTINO}.git" "$RUNNER_TEMP/destino"
+          cd "$RUNNER_TEMP/destino"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          DESTINO="respaldos MD/${NOMBRE_PROYECTO}"
+          DESTINO="${NOMBRE_PROYECTO}/respaldo_MD"
           mkdir -p "${DESTINO}"
           cp "$RUNNER_TEMP/${ARCHIVO}" "${DESTINO}/${ARCHIVO}"
 
