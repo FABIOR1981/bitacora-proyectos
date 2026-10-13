@@ -7,7 +7,7 @@ on:
 jobs:
   llamar-empaquetador-maestro:
     # Asegúrate de que el nombre del archivo al final coincida con el que creaste en el paso anterior
-    uses: FABIOR1981/documentacion-central/.github/workflows/maestro-empaquetador.yml.yml@main
+    uses: FABIOR1981/documentacion-central/.github/workflows/maestro-empaquetador.yml@main
     secrets:
       # Aquí le "pasamos" el token del proyecto al flujo maestro
       BD_TOKEN: ${{ secrets.BD_TOKEN }}
