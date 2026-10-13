@@ -1,0 +1,13 @@
+name: Actualizar Bundle para IA
+
+on:
+  push:
+    branches: [ main ] # Cambia a 'master' si la rama principal se llama así
+
+jobs:
+  llamar-empaquetador-maestro:
+    # Asegúrate de que el nombre del archivo al final coincida con el que creaste en el paso anterior
+    uses: FABIOR1981/documentacion-central/.github/workflows/maestro-bundle.yml@main
+    secrets:
+      # Aquí le "pasamos" el token del proyecto al flujo maestro
+      BD_TOKEN: ${{ secrets.BD_TOKEN }}
