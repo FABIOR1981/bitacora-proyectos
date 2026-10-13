@@ -89,10 +89,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          mkdir -p "${NOMBRE_PROYECTO}"
-          cp "$RUNNER_TEMP/${ARCHIVO}" "${NOMBRE_PROYECTO}/${ARCHIVO}"
+          DESTINO="respaldos MD/${NOMBRE_PROYECTO}"
+          mkdir -p "${DESTINO}"
+          cp "$RUNNER_TEMP/${ARCHIVO}" "${DESTINO}/${ARCHIVO}"
 
-          git add "${NOMBRE_PROYECTO}/${ARCHIVO}"
+          git add "${DESTINO}/${ARCHIVO}"
           if git diff --staged --quiet; then
             echo "Sin cambios en el bundle."
             exit 0
