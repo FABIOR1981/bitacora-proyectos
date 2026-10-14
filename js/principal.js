@@ -6,7 +6,7 @@ const FASES = {
   idea: 'Idea'
 };
 
-const VERSION = '1.6.2';
+const VERSION = '1.7.0';
 const API = '/.netlify/functions/bitacora';
 
 let densidad = (() => {
@@ -58,6 +58,7 @@ const ICONOS = {
   sort: generarSVG('<path d="M7 4v16M4 17l3 3 3-3M17 20V4m-3 3 3-3 3 3"/>'),
   doc: generarSVG('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'),
   down: generarSVG('<path d="M12 4v11m-4-4 4 4 4-4M5 20h14"/>'),
+  refresh: generarSVG('<path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/>'),
   edit: generarSVG('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>'),
   repo: generarSVG('<path d="M6 3v12"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M18 8.5a9 9 0 0 1-9 9"/>')
 };
@@ -448,28 +449,63 @@ $('#version').textContent = 'Bitácora v' + VERSION;
 const extraerRepo = url => (url || '').replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
 const apiPeticion = cuerpo => fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clave: acceso, ...cuerpo }) });
 const formatearTamano = bytes => bytes < 1024 ? bytes + ' B' : bytes < 1048576 ? Math.round(bytes / 1024) + ' KB' : (bytes / 1048576).toFixed(1) + ' MB';
+const formatearFecha = iso => new Date(iso).toLocaleString('es-UY', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+let docsAbierto = null;
 
 async function verDocumentacion(id) {
   const proyecto = datos.find(x => x.id === id);
   if (!proyecto) return;
-  
+
   const repoDocs = proyecto.docs || extraerRepo(proyecto.repo) || 'FABIOR1981/' + proyecto.nombre;
+  docsAbierto = id;
   $('#tDocs').textContent = 'Documentación · ' + obtenerNombreVisible(proyecto);
   $('#listaDocs').innerHTML = '<p class="vacio">Buscando documentos…</p>';
-  $('#dDocs').showModal();
-  
+  if (!$('#dDocs').open) $('#dDocs').showModal();
+
   try {
     const respuesta = await apiPeticion({ accion: 'docs', repo: repoDocs });
     const json = await respuesta.json();
     if (!respuesta.ok) throw new Error(json.error || 'Error ' + respuesta.status);
-    
-    $('#listaDocs').innerHTML = json.archivos.length ? json.archivos.map(archivo => `
+
+    const hayRespaldo = json.archivos.some(a => /\.md$/i.test(a.nombre));
+    $('#listaDocs').innerHTML = json.archivos.length ? json.archivos.map(archivo => {
+      const esRespaldo = /\.md$/i.test(archivo.nombre);
+      const detalle = formatearTamano(archivo.tam) + (archivo.fecha ? ' · generado el ' + formatearFecha(archivo.fecha) : '');
+      // Botón de regenerar solo en el respaldo; en las demás filas va uno invisible para que "Abrir" quede alineado
+      const extra = esRespaldo
+        ? `<button class="btn" data-regen="${escaparHTML(repoDocs)}" data-id="${escaparHTML(id)}" aria-label="Regenerar respaldo" title="Regenerar respaldo">${ICONOS.refresh}</button>`
+        : (hayRespaldo ? `<button class="btn" style="visibility:hidden" tabindex="-1" aria-hidden="true">${ICONOS.refresh}</button>` : '');
+      return `
       <div class="doc">
-        <span>${escaparHTML(archivo.nombre)}<small>${formatearTamano(archivo.tam)}</small></span>
+        <span style="flex:1">${escaparHTML(archivo.nombre)}<small>${escaparHTML(detalle)}</small></span>
         <a class="btn" href="${escaparHTML(archivo.url)}" target="_blank" rel="noopener">${ICONOS.down} Abrir</a>
-      </div>
-    `).join('') : '<p class="vacio">Sin PDF en documentación central para este proyecto.</p>';
+        ${extra}
+      </div>`;
+    }).join('') : '<p class="vacio">Sin documentos en documentación central para este proyecto.</p>';
   } catch (err) {
     $('#listaDocs').innerHTML = `<p class="aviso">${escaparHTML(err.message)}</p>`;
   }
 }
+
+// Regenera el respaldo .md: dispara el workflow del proyecto y refresca la lista a los 60 s
+async function regenerarRespaldo(boton) {
+  if (boton.dataset.ocupado) return;
+  boton.dataset.ocupado = '1';
+  const nota = boton.closest('.doc').querySelector('small'), antes = nota.textContent;
+  nota.textContent = 'Solicitando…';
+  try {
+    const respuesta = await apiPeticion({ accion: 'regenerar', repo: boton.dataset.regen });
+    const json = await respuesta.json();
+    if (!respuesta.ok) throw new Error(json.error || 'Error ' + respuesta.status);
+    nota.textContent = 'Generando… tarda cerca de 1 minuto';
+    setTimeout(() => { if ($('#dDocs').open && docsAbierto === boton.dataset.id) verDocumentacion(boton.dataset.id); }, 60000);
+  } catch (err) {
+    nota.textContent = err.message;
+    setTimeout(() => { nota.textContent = antes; delete boton.dataset.ocupado; }, 6000);
+  }
+}
+
+$('#listaDocs').addEventListener('click', e => {
+  const boton = e.target.closest('[data-regen]');
+  if (boton) regenerarRespaldo(boton);
+});
