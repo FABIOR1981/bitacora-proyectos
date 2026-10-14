@@ -1,5 +1,5 @@
 // Netlify Function: único lugar que conoce el token de GitHub.
-// Variables de entorno en Netlify: GITHUB_TOKEN, CLAVE_ADMIN, GITHUB_TOKEN_DOCUMENTACION_CENTRAL (y opcionales GITHUB_REPO, DOCS_REPO)
+// Variables de entorno en Netlify: GITHUB_TOKEN_BASE_DATOS, CLAVE_ADMIN, GITHUB_TOKEN_DOCUMENTACION_CENTRAL (y opcionales GITHUB_REPO, DOCS_REPO)
 const crypto = require('crypto');
 const REPO = process.env.GITHUB_REPO || 'FABIOR1981/bd';
 const RUTA = 'bitacora/proyectos.json';
@@ -13,8 +13,8 @@ const MAX_BYTES = 4 * 1024 * 1024; // tope de descarga por la función
 const VIGENCIA_ENLACE = 15 * 60; // segundos que dura el enlace de un documento
 const VER_EN_NAVEGADOR = ['pdf']; // solo el PDF se abre en el navegador; el resto (incluido .md) se descarga
 
-const cab = (x = {}) => ({ Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + process.env.GITHUB_TOKEN, 'User-Agent': 'bitacora', ...x });
-const cabDocs = (x = {}) => cab({ Authorization: 'Bearer ' + (process.env.GITHUB_TOKEN_DOCUMENTACION_CENTRAL || process.env.GITHUB_TOKEN), ...x });
+const cab = (x = {}) => ({ Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + process.env.GITHUB_TOKEN_BASE_DATOS, 'User-Agent': 'bitacora', ...x });
+const cabDocs = (x = {}) => cab({ Authorization: 'Bearer ' + (process.env.GITHUB_TOKEN_DOCUMENTACION_CENTRAL || process.env.GITHUB_TOKEN_BASE_DATOS), ...x });
 const resp = (c, o) => ({ statusCode: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: typeof o === 'string' ? o : JSON.stringify(o) });
 const igual = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const claveOk = c => process.env.CLAVE_ADMIN && igual(c || '', process.env.CLAVE_ADMIN);
