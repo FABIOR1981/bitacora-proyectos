@@ -473,8 +473,8 @@ async function verDocumentacion(id) {
       const detalle = formatearTamano(archivo.tam) + (archivo.fecha ? ' · generado el ' + formatearFecha(archivo.fecha) : '');
       // Botón de regenerar solo en el respaldo; en las demás filas va uno invisible para que "Abrir" quede alineado
       const extra = esRespaldo
-        ? `<button class="btn" data-regen="${escaparHTML(repoDocs)}" data-id="${escaparHTML(id)}" aria-label="Regenerar respaldo" title="Regenerar respaldo">${ICONOS.refresh}</button>`
-        : (hayRespaldo ? `<button class="btn" style="visibility:hidden" tabindex="-1" aria-hidden="true">${ICONOS.refresh}</button>` : '');
+        ? `<button type="button" class="btn" data-regen="${escaparHTML(repoDocs)}" data-id="${escaparHTML(id)}" aria-label="Regenerar respaldo" title="Regenerar respaldo">${ICONOS.refresh}</button>`
+        : (hayRespaldo ? `<button type="button" class="btn" style="visibility:hidden" tabindex="-1" aria-hidden="true">${ICONOS.refresh}</button>` : '');
       return `
       <div class="doc">
         <span style="flex:1">${escaparHTML(archivo.nombre)}<small>${escaparHTML(detalle)}</small></span>
