@@ -1,5 +1,5 @@
 // Netlify Function: único lugar que conoce el token de GitHub.
-// Variables de entorno en Netlify: GITHUB_TOKEN, CLAVE_ADMIN, GITHUB_TOKEN_DOCUMENTACION_CENTRAL GITHUB_TOKEN_ACTIONS (y opcionales GITHUB_REPO, DOCS_REPO, WORKFLOW_EMPAQUETADOR)
+// Variables de entorno en Netlify: GITHUB_TOKEN, CLAVE_ADMIN, GITHUB_TOKEN_DOCUMENTACION_CENTRAL (y opcionales GITHUB_REPO, DOCS_REPO)
 const crypto = require('crypto');
 const REPO = process.env.GITHUB_REPO || 'FABIOR1981/bd';
 const RUTA = 'bitacora/proyectos.json';
@@ -10,8 +10,6 @@ const MIME = { pdf: 'application/pdf', md: 'text/markdown; charset=utf-8', doc: 
 const esPdf = n => /\.pdf$/i.test(String(n || '')); // en "documentacion" solo se muestran y sirven PDF
 const esMd = n => /\.md$/i.test(String(n || ''));   // en "respaldo_MD" solo se muestran y sirven .md
 const MAX_BYTES = 4 * 1024 * 1024; // tope de descarga por la función
-const WORKFLOW = process.env.WORKFLOW_EMPAQUETADOR || 'llamarEmpaquetador.yml'; // workflow de cada proyecto que genera el respaldo
-const RAMA_PROYECTO = 'main';
 const VIGENCIA_ENLACE = 15 * 60; // segundos que dura el enlace de un documento
 const VER_EN_NAVEGADOR = ['pdf']; // solo el PDF se abre en el navegador; el resto (incluido .md) se descarga
 
@@ -65,24 +63,6 @@ async function listar(repo) {
   }
 }
 
-// Dispara a demanda el workflow del proyecto que regenera el respaldo .md (requiere GITHUB_TOKEN_ACTIONS)
-async function regenerar(repo) {
-  if (!process.env.GITHUB_TOKEN_ACTIONS) return resp(500, { error: 'Falta configurar GITHUB_TOKEN_ACTIONS en Netlify' });
-  const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/${WORKFLOW}/dispatches`, {
-    method: 'POST',
-    headers: cab({ Authorization: 'Bearer ' + process.env.GITHUB_TOKEN_ACTIONS, 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ ref: RAMA_PROYECTO })
-  });
-  if (r.status === 204) return resp(200, { ok: true });
-  const mensajes = {
-    404: 'Este proyecto no tiene el empaquetador instalado (falta ' + WORKFLOW + ') o el token no tiene acceso al repo',
-    422: WORKFLOW + ' no tiene workflow_dispatch o la rama ' + RAMA_PROYECTO + ' no existe',
-    401: 'El token de Actions no es válido',
-    403: 'El token de Actions no tiene permiso para ejecutar workflows'
-  };
-  return resp(502, { error: mensajes[r.status] || 'GitHub respondió ' + r.status });
-}
-
 // Devuelve un archivo de documentacion-central para descargarlo
 async function bajar(repo, ruta) {
   if (!rutaOk(repo, ruta)) return resp(400, { error: 'Ruta inválida' });
@@ -118,11 +98,9 @@ exports.handler = async (ev) => {
     if (ev.httpMethod !== 'POST') return resp(405, { error: 'Método no permitido' });
     if (!claveOk(cuerpo.clave)) return resp(401, { error: 'Clave inválida' });
 
-    if (['docs', 'bajar', 'regenerar'].includes(cuerpo.accion)) {
+    if (cuerpo.accion === 'docs' || cuerpo.accion === 'bajar') {
       if (!repoOk(cuerpo.repo)) return resp(400, { error: 'Repositorio inválido' });
-      if (cuerpo.accion === 'docs') return await listar(cuerpo.repo);
-      if (cuerpo.accion === 'regenerar') return await regenerar(cuerpo.repo);
-      return await bajar(cuerpo.repo, cuerpo.ruta);
+      return cuerpo.accion === 'docs' ? await listar(cuerpo.repo) : await bajar(cuerpo.repo, cuerpo.ruta);
     }
 
     const meta = await fetch(`${API}?ref=${RAMA}`, { headers: cab() });
