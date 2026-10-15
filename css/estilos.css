@@ -658,3 +658,23 @@ dialog h2 {
   font: 600 0.8rem var(--fh);
   cursor: pointer;
 }
+
+.barra {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 40px 0px 28px 0px;
+  align-items: center;
+}
+
+.filtros-grupo {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap; /* Permite que pasen al siguiente renglón en lugar de cortarse */
+  width: 100%;     /* Ocupa todo el ancho disponible para ordenar los chips en filas */
+}
+
+.filtros-grupo .chip {
+  flex: none;
+  padding: 7px 12px;
+}
