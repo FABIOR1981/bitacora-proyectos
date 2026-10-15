@@ -6,7 +6,7 @@ const FASES = {
   idea: 'Idea'
 };
 
-const VERSION = '1.8.0';
+const VERSION = '1.8.1';
 const API = '/.netlify/functions/bitacora';
 
 let densidad = (() => {
@@ -31,6 +31,7 @@ let direccion = 1;
 let datos = [];
 let verificador = '';
 let faseActiva = 'todas';
+let grupoActivo = 'todos';
 let admin = false;
 let clave = '';
 let acceso = '';
@@ -163,11 +164,17 @@ async function guardarProyectos() {
 }
 
 function actualizarFiltros() {
-  const contarProyectos = fase => fase === 'todas' ? datos.length : datos.filter(p => p.fase === fase).length;
-  
-  $('#filtros').innerHTML = ['todas', ...Object.keys(FASES)]
-    .filter(fase => fase === 'todas' || contarProyectos(fase))
+  // Filtros de Fases
+  const contarFase = fase => fase === 'todas' ? datos.length : datos.filter(p => p.fase === fase).length;
+  $('#filtrosFases').innerHTML = ['todas', ...Object.keys(FASES)]
+    .filter(fase => fase === 'todas' || contarFase(fase))
     .map(fase => `<button class="chip" data-f="${fase}" aria-pressed="${fase === faseActiva}">${fase === 'todas' ? 'Todas' : FASES[fase]}</button>`)
+    .join('');
+
+  // Filtros de Grupos (Ecosistemas) ordenados alfabéticamente
+  const listaGrupos = [...new Set(datos.map(p => p.grupo || 'Otros proyectos'))].sort((a, b) => a.localeCompare(b, 'es'));
+  $('#filtrosGrupos').innerHTML = ['todos', ...listaGrupos]
+    .map(g => `<button class="chip" data-g="${g}" aria-pressed="${g === grupoActivo}">${g === 'todos' ? '📁 Todos los grupos' : '📁 ' + g}</button>`)
     .join('');
 }
 
@@ -205,7 +212,12 @@ function renderizarTarjeta(p, i) {
 function pintarProyectos() {
   const busqueda = $('#buscar').value.trim().toLowerCase();
   const proyectosFiltrados = datos
-    .filter(p => (faseActiva === 'todas' || p.fase === faseActiva) && (obtenerNombreVisible(p) + ' ' + p.nombre + ' ' + (p.descripcion || '') + ' ' + (p.grupo || '')).toLowerCase().includes(busqueda))
+    .filter(p => {
+      const cumpleFase = (faseActiva === 'todas' || p.fase === faseActiva);
+      const cumpleGrupo = (grupoActivo === 'todos' || (p.grupo || 'Otros proyectos') === grupoActivo);
+      const cumpleBusqueda = (obtenerNombreVisible(p) + ' ' + p.nombre + ' ' + (p.descripcion || '') + ' ' + (p.grupo || '')).toLowerCase().includes(busqueda);
+      return cumpleFase && cumpleGrupo && cumpleBusqueda;
+    })
     .sort(compararProyectos);
 
   const contenedor = $('#contenedorPrincipal');
@@ -213,7 +225,7 @@ function pintarProyectos() {
   if (!proyectosFiltrados.length) {
     contenedor.innerHTML = '<p class="vacio">Sin resultados.</p>';
   } else if (modoAgrupacion === 'secciones') {
-    // Agrupar por propiedad 'grupo'
+    // Agrupar y ordenar alfabéticamente las claves de los grupos
     const grupos = {};
     proyectosFiltrados.forEach(p => {
       const g = p.grupo || 'Otros proyectos';
@@ -221,16 +233,19 @@ function pintarProyectos() {
       grupos[g].push(p);
     });
 
-    contenedor.innerHTML = Object.entries(grupos).map(([nombreGrupo, listaProyectos]) => `
+    const gruposOrdenados = Object.keys(grupos).sort((a, b) => a.localeCompare(b, 'es'));
+
+    contenedor.innerHTML = gruposOrdenados.map(nombreGrupo => {
+      const listaProyectos = grupos[nombreGrupo];
+      return `
       <div class="seccion-grupo">
         <h3>📁 ${escaparHTML(nombreGrupo)} <span class="contador">${listaProyectos.length} ${listaProyectos.length === 1 ? 'proyecto' : 'proyectos'}</span></h3>
         <div class="grid" data-dens="${densidad}">
           ${listaProyectos.map((p, i) => renderizarTarjeta(p, i)).join('')}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   } else {
-    // Vista plana tradicional
     contenedor.innerHTML = `<div class="grid" data-dens="${densidad}">
       ${proyectosFiltrados.map((p, i) => renderizarTarjeta(p, i)).join('')}
     </div>`;
@@ -254,10 +269,18 @@ function actualizarModoUI() {
   pintarProyectos();
 }
 
-$('#filtros').onclick = e => {
+$('#filtrosFases').onclick = e => {
   const chip = e.target.closest('.chip');
   if (!chip) return;
   faseActiva = chip.dataset.f;
+  actualizarFiltros();
+  pintarProyectos();
+};
+
+$('#filtrosGrupos').onclick = e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  grupoActivo = chip.dataset.g;
   actualizarFiltros();
   pintarProyectos();
 };
