@@ -20,6 +20,7 @@
   <div class="acc">
     <button class="btn" id="nuevo" hidden>+ Nuevo</button>
     <button class="btn" id="llave" aria-pressed="false">Admin</button>
+    <select id="agrupacion" aria-label="Modo de vista"><option value="secciones">Vista por Secciones</option><option value="plana">Vista Plana</option></select>
     <select id="densidad" aria-label="Densidad de tarjetas"><option value="a">A · Compacta</option><option value="b">B · Mini</option></select>
     <button class="btn" id="tema"></button>
   </div>
@@ -29,7 +30,7 @@
   <select id="orden" aria-label="Ordenar por"><option value="nombre:1">Nombre (asc)</option><option value="nombre:-1">Nombre (desc)</option><option value="estado:1">Estado (asc)</option><option value="estado:-1">Estado (desc)</option></select>
   <div id="filtros"></div>
 </div>
-<section class="grid" id="lista" aria-live="polite"></section>
+<div id="contenedorPrincipal" aria-live="polite"></div>
 <p class="pie" id="version"></p>
 </main>
 
@@ -56,6 +57,7 @@
   <label>Repositorio (GitHub)<input id="eRepo" placeholder="https://github.com/FABIOR1981/…"></label>
   <label>URL del sitio<input id="eUrl" placeholder="https://…"></label>
   <label>Fase<select id="eFase"></select></label>
+  <label>Ecosistema / Grupo<input id="eGrupo" placeholder="Ej: Espacia, SM Consultores, Utilidades…"></label>
   <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="ePriv" style="width:auto"> Repositorio privado</label>
   <p class="aviso" id="avEd"></p>
   <div class="fila"><button type="button" class="btn del" id="bEd" hidden>Borrar</button><button type="button" class="btn" data-cerrar>Cancelar</button><button class="btn prim" id="gEd">Guardar</button></div></form></dialog>

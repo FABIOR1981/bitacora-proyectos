@@ -577,3 +577,38 @@ dialog h2 {
   .grid[data-dens=b] .links span:not(.bloq) { display: none; }
   .grid[data-dens=b] .t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; }
 }
+
+/* Estilos para las Secciones de Ecosistemas */
+.seccion-grupo {
+  margin-bottom: 40px;
+}
+
+.seccion-grupo h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--tx);
+  border-bottom: 2px solid var(--bd);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.seccion-grupo h3 span.contador {
+  font: 400 0.75rem var(--fm);
+  color: var(--mu);
+  background-color: var(--sf);
+  border: 1px solid var(--bd);
+  padding: 2px 10px;
+  border-radius: 99px;
+}
+
+#agrupacion {
+  width: auto;
+  border-radius: 99px;
+  padding: 8px 14px;
+  font: 600 0.8rem var(--fh);
+  cursor: pointer;
+}

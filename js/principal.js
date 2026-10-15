@@ -6,7 +6,7 @@ const FASES = {
   idea: 'Idea'
 };
 
-const VERSION = '1.7.1';
+const VERSION = '1.8.0';
 const API = '/.netlify/functions/bitacora';
 
 let densidad = (() => {
@@ -15,6 +15,14 @@ let densidad = (() => {
     return d === 'b' ? 'b' : 'a';
   } catch (e) {
     return 'a';
+  }
+})();
+
+let modoAgrupacion = (() => {
+  try {
+    return localStorage.getItem('agrupacion') || 'secciones';
+  } catch (e) {
+    return 'secciones';
   }
 })();
 
@@ -112,7 +120,11 @@ async function cargarProyectos() {
   
   const json = await respuesta.json();
   verificador = json.verificador || '';
-  datos = (json.proyectos || []).map(p => ({ ...p, nombre_fantasia: p.nombre_fantasia || p.nombre }));
+  datos = (json.proyectos || []).map(p => ({ 
+    ...p, 
+    nombre_fantasia: p.nombre_fantasia || p.nombre,
+    grupo: p.grupo || 'Otros proyectos'
+  }));
   
   await Promise.all(datos.map(async p => {
     if (p.urlCifrado) {
@@ -169,32 +181,60 @@ const compararPorNombre = (a, b) => obtenerNombreVisible(a).localeCompare(obtene
 const compararProyectos = (a, b) => (orden === 'estado' ? (obtenerIndiceFase(a.fase) - obtenerIndiceFase(b.fase)) || compararPorNombre(a, b) : compararPorNombre(a, b)) * direccion;
 
 function aplicarDensidad() {
-  $('#lista').dataset.dens = densidad;
+  $('#agrupacion').value = modoAgrupacion;
   $('#densidad').value = densidad;
+}
+
+function renderizarTarjeta(p, i) {
+  const repoURL = admin ? validarURLSegura(p.repo) : '';
+  const sitioURL = validarURLSegura(p.url);
+  
+  return `<article class="card" title="${escaparHTML(p.descripcion)}" style="--c:var(--${escaparHTML(p.fase)},var(--mu));animation-delay:${i * 30}ms">
+    <span class="fase" title="${escaparHTML(FASES[p.fase] || p.fase)}"><i></i><em class="t">${escaparHTML(FASES[p.fase] || p.fase)}${p.privado && admin ? ` · ${ICONOS.lock} privado` : ''}</em></span>
+    <h2>${escaparHTML(obtenerNombreVisible(p))}</h2>
+    <p class="desc">${escaparHTML(p.descripcion)}</p>
+    <div class="links${admin ? ' admin' : ''}">
+      ${sitioURL ? `<a href="${sitioURL}" target="_blank" rel="noopener">${ICONOS.ext}<em class="t">Sitio</em></a>` : '<span>sin URL</span>'}
+      ${admin ? (repoURL ? `<a href="${repoURL}" target="_blank" rel="noopener">${ICONOS.repo}<em class="t">Repo</em></a>` : '<span>sin repo</span>') : ''}
+      ${p.nombre ? `<button data-docs="${escaparHTML(p.id)}">${ICONOS.doc}<em class="t">Docs</em></button>` : ''}
+      ${admin ? `<button data-ed="${escaparHTML(p.id)}">${ICONOS.edit}<em class="t">Editar</em></button>` : ''}
+    </div>
+  </article>`;
 }
 
 function pintarProyectos() {
   const busqueda = $('#buscar').value.trim().toLowerCase();
   const proyectosFiltrados = datos
-    .filter(p => (faseActiva === 'todas' || p.fase === faseActiva) && (obtenerNombreVisible(p) + ' ' + p.nombre + ' ' + (p.descripcion || '')).toLowerCase().includes(busqueda))
+    .filter(p => (faseActiva === 'todas' || p.fase === faseActiva) && (obtenerNombreVisible(p) + ' ' + p.nombre + ' ' + (p.descripcion || '') + ' ' + (p.grupo || '')).toLowerCase().includes(busqueda))
     .sort(compararProyectos);
 
-  $('#lista').innerHTML = proyectosFiltrados.length ? proyectosFiltrados.map((p, i) => {
-    const repoURL = admin ? validarURLSegura(p.repo) : '';
-    const sitioURL = validarURLSegura(p.url);
-    
-    return `<article class="card" title="${escaparHTML(p.descripcion)}" style="--c:var(--${escaparHTML(p.fase)},var(--mu));animation-delay:${i * 30}ms">
-      <span class="fase" title="${escaparHTML(FASES[p.fase] || p.fase)}"><i></i><em class="t">${escaparHTML(FASES[p.fase] || p.fase)}${p.privado && admin ? ` · ${ICONOS.lock} privado` : ''}</em></span>
-      <h2>${escaparHTML(obtenerNombreVisible(p))}</h2>
-      <p class="desc">${escaparHTML(p.descripcion)}</p>
-      <div class="links${admin ? ' admin' : ''}">
-        ${sitioURL ? `<a href="${sitioURL}" target="_blank" rel="noopener">${ICONOS.ext}<em class="t">Sitio</em></a>` : '<span>sin URL</span>'}
-        ${admin ? (repoURL ? `<a href="${repoURL}" target="_blank" rel="noopener">${ICONOS.repo}<em class="t">Repo</em></a>` : '<span>sin repo</span>') : ''}
-        ${p.nombre ? `<button data-docs="${escaparHTML(p.id)}">${ICONOS.doc}<em class="t">Docs</em></button>` : ''}
-        ${admin ? `<button data-ed="${escaparHTML(p.id)}">${ICONOS.edit}<em class="t">Editar</em></button>` : ''}
+  const contenedor = $('#contenedorPrincipal');
+
+  if (!proyectosFiltrados.length) {
+    contenedor.innerHTML = '<p class="vacio">Sin resultados.</p>';
+  } else if (modoAgrupacion === 'secciones') {
+    // Agrupar por propiedad 'grupo'
+    const grupos = {};
+    proyectosFiltrados.forEach(p => {
+      const g = p.grupo || 'Otros proyectos';
+      if (!grupos[g]) grupos[g] = [];
+      grupos[g].push(p);
+    });
+
+    contenedor.innerHTML = Object.entries(grupos).map(([nombreGrupo, listaProyectos]) => `
+      <div class="seccion-grupo">
+        <h3>📁 ${escaparHTML(nombreGrupo)} <span class="contador">${listaProyectos.length} ${listaProyectos.length === 1 ? 'proyecto' : 'proyectos'}</span></h3>
+        <div class="grid" data-dens="${densidad}">
+          ${listaProyectos.map((p, i) => renderizarTarjeta(p, i)).join('')}
+        </div>
       </div>
-    </article>`;
-  }).join('') : '<p class="vacio">Sin resultados.</p>';
+    `).join('');
+  } else {
+    // Vista plana tradicional
+    contenedor.innerHTML = `<div class="grid" data-dens="${densidad}">
+      ${proyectosFiltrados.map((p, i) => renderizarTarjeta(p, i)).join('')}
+    </div>`;
+  }
 
   const enProduccion = datos.filter(p => p.fase === 'produccion').length;
   $('#resumen').textContent = `${datos.length} proyectos · ${enProduccion} en producción${admin ? ' · modo admin' : ''}`;
@@ -228,6 +268,13 @@ $('#densidad').onchange = e => {
   densidad = e.target.value === 'b' ? 'b' : 'a';
   try { localStorage.setItem('densidad', densidad); } catch (err) {}
   aplicarDensidad();
+  pintarProyectos();
+};
+
+$('#agrupacion').onchange = e => {
+  modoAgrupacion = e.target.value;
+  try { localStorage.setItem('agrupacion', modoAgrupacion); } catch (err) {}
+  pintarProyectos();
 };
 
 $('#orden').onchange = e => {
@@ -287,7 +334,7 @@ $('#eFase').innerHTML = Object.entries(FASES).map(([k, v]) => `<option value="${
 
 function abrirModalEdicion(id) {
   editId = id;
-  const proyecto = datos.find(x => x.id === id) || { fase: 'desarrollo' };
+  const proyecto = datos.find(x => x.id === id) || { fase: 'desarrollo', grupo: 'Otros proyectos' };
   nombreFantasiaEditada = !!id;
   
   $('#tEd').textContent = id ? 'Editar proyecto' : 'Nuevo proyecto';
@@ -298,6 +345,7 @@ function abrirModalEdicion(id) {
   $('#eRepo').value = proyecto.repo || '';
   $('#eUrl').value = proyecto.url || '';
   $('#eFase').value = proyecto.fase;
+  $('#eGrupo').value = proyecto.grupo || 'Otros proyectos';
   $('#ePriv').checked = !!proyecto.privado;
   $('#avEd').textContent = '';
   $('#bEd').hidden = !id;
@@ -316,7 +364,7 @@ $('#eFantasia').oninput = () => {
 
 $('#nuevo').onclick = () => abrirModalEdicion(null);
 
-$('#lista').onclick = async e => {
+$('#contenedorPrincipal').onclick = async e => {
   const docsBtn = e.target.closest('[data-docs]');
   if (docsBtn) return verDocumentacion(docsBtn.dataset.docs);
   
@@ -362,6 +410,7 @@ $('#fEd').onsubmit = async e => {
     repo: $('#eRepo').value.trim(),
     url: $('#eUrl').value.trim(),
     fase: $('#eFase').value,
+    grupo: $('#eGrupo').value.trim() || 'Otros proyectos',
     privado: $('#ePriv').checked
   };
   
